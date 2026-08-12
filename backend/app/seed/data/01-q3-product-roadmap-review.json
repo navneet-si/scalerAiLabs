@@ -1,0 +1,100 @@
+{
+  "title": "Q3 Product Roadmap Review",
+  "description": "Cross-functional review of the Q3 roadmap, scope cuts, and launch sequencing.",
+  "days_ago": 1,
+  "time": "10:00",
+  "duration_ms": 468000,
+  "tags": ["Product", "Roadmap"],
+  "organizer": "Sarah Chen",
+  "participants": [
+    { "name": "Sarah Chen", "email": "sarah.chen@northwind.io", "color": "#6366f1", "role": "host" },
+    { "name": "Marcus Rodriguez", "email": "marcus.r@northwind.io", "color": "#f59e0b", "role": "attendee" },
+    { "name": "Priya Nair", "email": "priya.nair@northwind.io", "color": "#10b981", "role": "attendee" },
+    { "name": "Alex Rivera", "email": "alex.rivera@northwind.io", "color": "#ec4899", "role": "attendee" }
+  ],
+  "summary": {
+    "overview": "The team reviewed the Q3 roadmap and agreed to cut scope on the reporting rebuild in order to protect the collaborative editing launch. Marcus flagged that the migration to the new sync engine is two weeks behind because of an unexpected conflict-resolution bug, and the group decided to ship collaborative editing behind a feature flag to a 5% beta cohort rather than delaying the whole quarter. Priya raised that the redesigned reporting views are already in usability testing and would be wasted work if deprioritised entirely, so the compromise is to ship the new charts without the custom-metrics builder. Sarah closed by confirming the launch date stays at September 15 and asked for a revised sequencing doc by Friday.",
+    "keywords": ["Q3 roadmap", "collaborative editing", "sync engine", "feature flag", "reporting rebuild", "beta cohort"],
+    "bullet_notes": [
+      {
+        "title": "Roadmap status",
+        "points": [
+          "Collaborative editing is the quarter's anchor commitment and stays at September 15.",
+          "Reporting rebuild slips to Q4 except for the redesigned chart views.",
+          "Custom-metrics builder is explicitly cut from Q3 scope."
+        ]
+      },
+      {
+        "title": "Sync engine risk",
+        "points": [
+          "Migration is roughly two weeks behind schedule.",
+          "Root cause is a conflict-resolution bug when two clients edit the same block offline.",
+          "Marcus estimates one more week to a fix, with a hard checkpoint on Wednesday."
+        ]
+      },
+      {
+        "title": "Launch approach",
+        "points": [
+          "Ship behind a feature flag to a 5% beta cohort instead of a full rollout.",
+          "Beta feedback gate decides whether the flag opens to 100% in early October.",
+          "Support needs a runbook before the cohort is switched on."
+        ]
+      }
+    ]
+  },
+  "chapters": [
+    { "title": "Quarter status and agenda", "gist": "Sarah frames the review and the two decisions that need to land today.", "start_ms": 0, "end_ms": 37000 },
+    { "title": "Sync engine delay", "gist": "Marcus walks through the conflict-resolution bug and the revised estimate.", "start_ms": 37000, "end_ms": 285000 },
+    { "title": "Reporting scope debate", "gist": "Priya argues to preserve the chart work already in usability testing.", "start_ms": 285000, "end_ms": 401000 },
+    { "title": "Launch sequencing decision", "gist": "The group settles on a flagged 5% beta and confirms the September 15 date.", "start_ms": 401000, "end_ms": 468000 }
+  ],
+  "action_items": [
+    { "text": "Send a revised Q3 sequencing doc with the reporting cuts marked", "assignee": "Sarah Chen", "due_in_days": 3, "is_done": false },
+    { "text": "Land the conflict-resolution fix and report at Wednesday's checkpoint", "assignee": "Marcus Rodriguez", "due_in_days": 2, "is_done": false },
+    { "text": "Share usability findings on the new chart views", "assignee": "Priya Nair", "due_in_days": 4, "is_done": true },
+    { "text": "Draft the support runbook for the beta cohort", "assignee": "Alex Rivera", "due_in_days": 6, "is_done": false }
+  ],
+  "segments": [
+    { "speaker": "Sarah Chen", "start_ms": 0, "end_ms": 11000, "text": "Alright, I think we have everyone. Let's keep this one tight — there are really only two decisions I need us to land today, and the rest is status." },
+    { "speaker": "Sarah Chen", "start_ms": 11000, "end_ms": 24000, "text": "Decision one is what we do about the sync engine slip. Decision two is whether the reporting rebuild survives the quarter in any form. Everything else can go async." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 24000, "end_ms": 31000, "text": "That's fair. I'd rather start with sync since it's the thing that's actually blocking." },
+    { "speaker": "Sarah Chen", "start_ms": 31000, "end_ms": 37000, "text": "Go ahead. And be blunt about the estimate, I don't want a polite number." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 37000, "end_ms": 52000, "text": "Okay. We're about two weeks behind. Not because of the migration itself — that part actually went smoothly — but because we found a conflict-resolution bug once we started testing with real offline clients." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 52000, "end_ms": 71000, "text": "The scenario is two people editing the same block while offline. When they both reconnect, the merge picks a winner instead of reconciling, so one person's edits just vanish. No error, no warning, they're gone." },
+    { "speaker": "Priya Nair", "start_ms": 71000, "end_ms": 78000, "text": "That's the worst possible failure mode for a collaborative editor. Silent data loss." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 78000, "end_ms": 84000, "text": "It is. Which is why I'm not comfortable shipping around it." },
+    { "speaker": "Alex Rivera", "start_ms": 84000, "end_ms": 96000, "text": "How often does it actually reproduce? I'm asking because if it needs two people offline on the same block, that might be rare enough to accept temporarily." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 96000, "end_ms": 114000, "text": "It's rarer than average, sure, but it's not exotic. Two people in a doc during a flaky conference call hits it. And the customers most likely to hit it are exactly the ones we'd put in a beta." },
+    { "speaker": "Sarah Chen", "start_ms": 114000, "end_ms": 122000, "text": "So what's the real fix, and how long does it take?" },
+    { "speaker": "Marcus Rodriguez", "start_ms": 122000, "end_ms": 141000, "text": "The real fix is moving that path onto proper CRDT merge semantics instead of the last-write-wins shortcut we inherited. I've got a branch. I'd say one more week to have it correct, plus a few days of soak testing." },
+    { "speaker": "Sarah Chen", "start_ms": 141000, "end_ms": 149000, "text": "One week to correct, or one week to shippable? Those are different weeks." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 149000, "end_ms": 160000, "text": "One week to correct. Call it ten days to shippable. I'd rather commit to a Wednesday checkpoint where I show you the reproduction failing to reproduce." },
+    { "speaker": "Sarah Chen", "start_ms": 160000, "end_ms": 168000, "text": "Let's do that. Wednesday checkpoint, and if it slips again we're having a different conversation about the launch date." },
+    { "speaker": "Priya Nair", "start_ms": 168000, "end_ms": 176000, "text": "Can I ask what this does to the September 15 date? Because design has been building toward that." },
+    { "speaker": "Sarah Chen", "start_ms": 176000, "end_ms": 190000, "text": "That's the thing I want to protect. September 15 is external — it's in two customer conversations and a conference talk. I'd cut almost anything else before I move it." },
+    { "speaker": "Alex Rivera", "start_ms": 190000, "end_ms": 203000, "text": "Then the honest options are: move the date, cut scope somewhere else, or ship collaborative editing to fewer people on the date." },
+    { "speaker": "Sarah Chen", "start_ms": 203000, "end_ms": 209000, "text": "Say more about the third one." },
+    { "speaker": "Alex Rivera", "start_ms": 209000, "end_ms": 228000, "text": "Put it behind a flag. On September 15 we turn it on for a small beta cohort — five percent, hand-picked accounts, people we can call. We get the launch moment and the real-world signal without betting the whole base on a fresh sync engine." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 228000, "end_ms": 238000, "text": "I like that considerably more than a full rollout. Five percent is a number I can actually monitor." },
+    { "speaker": "Priya Nair", "start_ms": 238000, "end_ms": 251000, "text": "It changes the announcement though. We can't say 'collaborative editing is here' if it's five percent. It has to be framed as a beta or people will try it and not find it." },
+    { "speaker": "Sarah Chen", "start_ms": 251000, "end_ms": 262000, "text": "Agreed, and honestly a beta framing is easier to defend. Let's call it an early access program. Marcus, does five percent give you enough signal?" },
+    { "speaker": "Marcus Rodriguez", "start_ms": 262000, "end_ms": 275000, "text": "For correctness bugs, yes, as long as we pick accounts that actually collaborate. Five percent of accounts that never open a shared doc tells us nothing." },
+    { "speaker": "Sarah Chen", "start_ms": 275000, "end_ms": 285000, "text": "Good point. We'll pick the cohort by usage, not at random. Okay — that's decision one. Let's move to reporting." },
+    { "speaker": "Sarah Chen", "start_ms": 285000, "end_ms": 300000, "text": "Priya, I'll be upfront: my instinct is that the reporting rebuild moves to Q4 entirely. We can't have two large in-flight bets while the sync engine is unstable." },
+    { "speaker": "Priya Nair", "start_ms": 300000, "end_ms": 318000, "text": "I understand the instinct, but I want to push back on 'entirely'. The chart views are already built and in usability testing this week. That's finished work. Deferring it doesn't save engineering time, it just wastes design time." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 318000, "end_ms": 332000, "text": "That's true from my side too. The charts are a front-end change against existing endpoints. It's the custom-metrics builder that's expensive — that's the one that needs new query infrastructure." },
+    { "speaker": "Sarah Chen", "start_ms": 332000, "end_ms": 341000, "text": "So the split is charts cheap, metrics builder expensive. How expensive are we talking?" },
+    { "speaker": "Marcus Rodriguez", "start_ms": 341000, "end_ms": 356000, "text": "Weeks. It needs a safe query layer so customers can't write something that takes down the warehouse. I would not want to start that in the same quarter as the sync migration." },
+    { "speaker": "Alex Rivera", "start_ms": 356000, "end_ms": 368000, "text": "Then cut the builder, keep the charts. That's a clean line and it's easy to explain to customers who asked for either one." },
+    { "speaker": "Priya Nair", "start_ms": 368000, "end_ms": 379000, "text": "That works for me. I'd want it stated clearly in the roadmap doc though, because the last time we said 'deferred' three people read it as 'cancelled'." },
+    { "speaker": "Sarah Chen", "start_ms": 379000, "end_ms": 391000, "text": "Fair. I'll mark it as committed for Q4 with the reason written down. Anything that's cut, I'll say why it was cut." },
+    { "speaker": "Priya Nair", "start_ms": 391000, "end_ms": 401000, "text": "Thank you. I'll get you the usability findings on the charts by Thursday so the doc can reference real numbers." },
+    { "speaker": "Sarah Chen", "start_ms": 401000, "end_ms": 414000, "text": "Perfect. Let me read back what I have. Collaborative editing ships September 15 behind a flag to a five percent usage-selected cohort, framed as early access." },
+    { "speaker": "Sarah Chen", "start_ms": 414000, "end_ms": 425000, "text": "Sync fix has a Wednesday checkpoint with Marcus. Reporting keeps the new chart views, cuts the custom-metrics builder to Q4." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 425000, "end_ms": 430000, "text": "That matches what I heard." },
+    { "speaker": "Alex Rivera", "start_ms": 430000, "end_ms": 441000, "text": "One addition — support needs a runbook before we flip the cohort on. If five percent of accounts hit a sync bug, the first call goes to support, not to us." },
+    { "speaker": "Sarah Chen", "start_ms": 441000, "end_ms": 449000, "text": "Good catch. Alex, can you draft that? It doesn't need to be long, it needs to exist." },
+    { "speaker": "Alex Rivera", "start_ms": 449000, "end_ms": 455000, "text": "Yep, I'll have something by end of next week." },
+    { "speaker": "Sarah Chen", "start_ms": 455000, "end_ms": 466000, "text": "Great. I'll send the revised sequencing doc Friday. If anything in it surprises you, say so before Monday, not after." }
+  ]
+}
