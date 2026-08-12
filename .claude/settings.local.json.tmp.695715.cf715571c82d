@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:guide.fireflies.ai)",
+      "Bash(aws --version)",
+      "Bash(env)",
+      "Bash(aws sts *)",
+      "Bash(aws configure *)",
+      "Bash(timeout 30 aws ec2 describe-instances --query 'Reservations[].Instances[].{Name:Tags[?Key==`Name`]|[0].Value,Id:InstanceId,Type:InstanceType,State:State.Name,Ip:PublicIpAddress}' --output table)",
+      "Bash(timeout 20 aws ec2 describe-key-pairs --query 'KeyPairs[].KeyName' --output text)",
+      "Bash(timeout 20 aws route53 list-hosted-zones --query 'HostedZones[].Name' --output text)",
+      "Bash(touch app/__init__.py app/core/__init__.py)",
+      "Bash(python3 -V)",
+      "Bash(python3 -m venv .venv)",
+      "Bash(.venv/bin/pip -q install -r requirements.txt)",
+      "Bash(.venv/bin/pip list *)",
+      "Bash(.venv/bin/python -V)",
+      "Bash(python3 -c \"import json;d=json.load\\(open\\('backend/app/seed/data/01-q3-product-roadmap-review.json'\\)\\);print\\('segments:',len\\(d['segments']\\),'| last end_ms:',d['segments'][-1]['end_ms'],'| duration_ms:',d['duration_ms']\\)\")",
+      "Bash(docker --version)",
+      "Bash(docker compose *)",
+      "Bash(npm -v)",
+      "Bash(git --version)",
+      "Skill(claude-api)",
+      "Bash(docker build *)",
+      "Bash(echo \"BUILD_EXIT=$?\")",
+      "Bash(npx --yes create-next-app@latest frontend --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --yes)",
+      "Bash(echo \"NEXT_EXIT=$?\")",
+      "Bash(docker run *)",
+      "Bash(echo \"VERIFY_EXIT=$?\")",
+      "Bash(python3 -c ' *)",
+      "Bash(git add *)",
+      "Bash(git -c user.email=snehasish@optmyzr.com -c user.name=Snehasish commit -q -m 'Add seed loader, API schemas, and verified schema checks *)"
+    ]
+  }
+}

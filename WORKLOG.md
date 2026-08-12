@@ -83,7 +83,7 @@ Notes:
 - Time is stored as integer milliseconds everywhere.
 
 ### 6. First seed fixture
-- `backend/app/seed/data/01-q3-product-roadmap-review.json` — 45 dialogue
+- `backend/app/seed/data/01-q3-product-roadmap-review.json` — 41 dialogue
   segments, 4 participants, summary (overview + 6 keywords + 3 grouped bullet
   sections), 4 chapters, 4 action items.
 - **Bug found and fixed during authoring:** `duration_ms` was 2,436,000 (40 min)
@@ -152,6 +152,50 @@ Next.js scaffold) before starting Phase 1 verification.
     Sonnet 5 for bulk implementation (intro pricing ends 2026-08-31), Haiku 4.5 for mechanical
     work. Parallelise frontend/backend after the API contract is fixed; do **not** parallelise
     the transcript↔player sync feature.
+
+### 11. Model routing agreed
+- User selected the full delegation plan. Routing: Opus (me) keeps schema, the
+  transcript↔player sync, deploy and the README; Sonnet takes seed fixtures and bulk
+  implementation; Haiku takes mechanical sweeps.
+- Two hard gates, nothing parallelises across them:
+  - **Gate A** — schema verified → seed fixtures can fan out.
+  - **Gate B** — API contract frozen → frontend and backend can split.
+- Peak concurrency 5 (the fixture fan-out). I review every agent diff before it lands.
+
+### 12. Phase 0 closed
+- `docker build` on `python:3.12-slim` **exited 0** — cp312 wheels resolved for the whole
+  dependency set, confirming the B-1 resolution works.
+- `git init` + first commit `ab349bb`. Verified `git ls-files` excludes `notes/` and `.venv`.
+- `create-next-app` completed (exit 0): TypeScript, Tailwind, ESLint, App Router, `src/`.
+  Node v25 handled it fine, so the earlier concern did not materialise.
+- Outstanding: `npm run dev` smoke check.
+
+### 13. Phases 1–3 code written
+- `seed/loader.py` — idempotent loader; participants deduplicated on email across fixtures;
+  `days_ago` → absolute dates at load time; `validate_fixture()` enforces the timeline
+  invariants so a malformed fixture fails startup rather than silently producing a broken
+  seek bar. Wired into the FastAPI lifespan behind the `seed_on_startup` setting.
+- `seed/data/FORMAT.md` — documents the fixture/upload format and its invariants. Doubles
+  as the brief for the fan-out agents and as source material for the README.
+- `schemas/` — Pydantic v2 response/request models, deliberately separate from the ORM
+  models. `MeetingListItem` excludes transcript segments (a 10-row library would otherwise
+  ship thousands of unrendered lines); `MeetingDetail` excludes them too so the summary
+  panel can paint before the transcript arrives. **This is Gate B.**
+- `scripts/verify_schema.py` — one pass over DDL, PRAGMAs, seed load, idempotency and
+  cascade deletes. **Written but not yet run.**
+
+### 14. Process correction — avoid self-inflicted reruns
+- I added `email-validator` to `requirements.txt` *after* the image had already been built,
+  forcing a rebuild. The user flagged this: keeping the plan and log current as work happens
+  is what prevents duplicate work and re-runs, and preserves context across sessions.
+- **Adopted rules:**
+  1. Update `PLAN.md` / `WORKLOG.md` *as* steps complete, not in retrospective batches.
+  2. Before any expensive step (image build, install, deploy), check the record for
+     pending changes that should be batched into it.
+  3. Record what has been *verified by running it* versus merely written — this log now
+     distinguishes the two explicitly.
+- Applied immediately: `requirements.txt` was reviewed against every remaining phase and
+  frozen (see PLAN.md → Phase 0 → Dependency freeze), so exactly **one** rebuild remains.
 
 ### Environment quirks worth remembering
 - Shell is **zsh**: unquoted `$var` does **not** word-split. An early

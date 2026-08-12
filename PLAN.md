@@ -9,10 +9,10 @@ output seen) — not when the code is merely written.
 
 | Phase | Name | Status |
 |---|---|---|
-| 0 | Environment & scaffold | 🟡 In progress |
-| 1 | Database schema & models | 🟡 In progress |
-| 2 | Seed data | 🟡 In progress |
-| 3 | Backend API — read paths | ⬜ |
+| 0 | Environment & scaffold | 🟢 Done (pending `npm run dev` check) |
+| 1 | Database schema & models | 🟡 Code complete — verification not yet run |
+| 2 | Seed data | 🟡 Loader done, fixtures 2–6 outstanding |
+| 3 | Backend API — read paths | 🟡 Schemas done, routers outstanding |
 | 4 | Backend API — CRUD & ingestion | ⬜ |
 | 5 | Frontend scaffold & design system | ⬜ |
 | 6 | Meetings library view | ⬜ |
@@ -30,21 +30,26 @@ output seen) — not when the code is merely written.
 Get a reproducible Python/Node toolchain and the repo skeleton the deliverable
 requires (`frontend/` + `backend/`).
 
-- [x] Repo skeleton `backend/app/{core,models,seed}`
+- [x] Repo skeleton `backend/app/{core,models,seed,schemas,scripts}`
 - [x] `requirements.txt`
-- [ ] **Working** Python environment with deps installed (see Blocker B-1)
-- [ ] `.gitignore` (exclude `.venv`, `node_modules`, `data/*.db`, `.env`)
-- [ ] `git init` + initial commit
-- [ ] Frontend scaffold (`create-next-app`, TypeScript + Tailwind)
+- [x] **Working** Python environment — Docker `python:3.12-slim` (B-1 resolved)
+- [x] `.gitignore` (excludes `.venv`, `node_modules`, `*.db`, `.env`, `notes/`)
+- [x] `git init` + initial commit (`ab349bb`)
+- [x] Frontend scaffold (`create-next-app`, TypeScript + Tailwind, App Router, `src/`)
+- [ ] `npm run dev` smoke check
 
-**Exit criteria:** `python -c "import fastapi, sqlalchemy, pydantic"` succeeds and
-`npm run dev` serves the Next.js starter.
+**Exit criteria:** image builds and imports succeed (✅ — build exited 0 on
+`python:3.12-slim`, cp312 wheels resolved); `npm run dev` serves the starter.
 
-**Blocker B-1:** local interpreter is Python 3.14.6; the pinned
-`pydantic==2.10.4` has no cp314 wheel and the source build failed. Resolution
-options: (a) relax pins to versions publishing cp314 wheels, (b) run the backend
-in Docker on `python:3.12-slim` locally as well as in production. Option (b) is
-preferred because it makes local and deployed environments identical.
+**Blocker B-1 — RESOLVED.** Local interpreter is Python 3.14.6 and pinned
+`pydantic==2.10.4` has no cp314 wheel, so the source build failed. Resolved by
+running the backend in Docker on `python:3.12-slim` locally *and* in production,
+which also makes the two environments identical.
+
+**Dependency freeze.** `requirements.txt` was reviewed against every remaining
+phase (uploads → `python-multipart`, VTT/TXT parsing → stdlib, export → stdlib,
+email validation → `email-validator`). It is considered complete; further
+additions mid-build force an image rebuild, so batch any into one.
 
 ## Phase 1 — Database schema & models 🟡
 
@@ -58,8 +63,9 @@ deliberately rather than derived from the UI.
 - [x] `Summary` (overview + JSON keywords/bullet notes) and `Chapter` (seekable outline)
 - [x] `ActionItem` (assignee, done flag, due date, optional source segment)
 - [x] `Tag` + `meeting_tags` (M2M, powers bonus tag filtering)
-- [ ] Verify `Base.metadata.create_all()` runs and emits the expected DDL
-- [ ] Confirm `ON DELETE CASCADE` behaviour with `PRAGMA foreign_keys=ON`
+- [x] `backend/scripts/verify_schema.py` written — checks DDL, PRAGMAs, seed load,
+      loader idempotency, and cascade deletes in one pass
+- [ ] **Run it** (blocked only on one image rebuild for `email-validator`)
 
 **Design decisions to defend in the interview:**
 1. **All time is `*_ms` integers.** Transcript segments, chapters and meeting
@@ -80,17 +86,24 @@ segments, summary, chapters and action items.
 Task requires the app to be "immediately usable" on first run.
 
 - [x] Canonical fixture JSON shape defined (doubles as the upload format)
-- [x] Fixture 1 — Q3 Product Roadmap Review (45 segments)
-- [ ] Fixtures 2–6 (varied: sales call, 1:1, standup, customer interview, design review)
-- [ ] Idempotent loader: seeds only when the `meetings` table is empty
-- [ ] Dates stored as `days_ago` offsets so the library always looks current
+- [x] Fixture 1 — Q3 Product Roadmap Review (41 segments, 468s)
+- [x] `data/FORMAT.md` — schema, invariants and content guidance; also the brief
+      handed to the fan-out agents
+- [x] Idempotent loader (`seed/loader.py`): no-op when `meetings` is non-empty
+- [x] `validate_fixture()` enforces the timeline invariants at load time, so a bad
+      fixture fails startup loudly instead of producing a broken seek bar
+- [x] Dates stored as `days_ago` offsets so the library always looks current
+- [ ] Fixtures 2–6 — **fanned out to 5 parallel Sonnet agents** (sales call, 1:1,
+      standup, customer interview, design review)
 
 **Exit criteria:** fresh DB → 6 meetings with full transcripts, summaries,
 chapters and action items; re-running the loader does not duplicate rows.
 
 ## Phase 3 — Backend API, read paths ⬜
 
-- [ ] Pydantic v2 schemas (separate from ORM models)
+- [x] Pydantic v2 schemas (separate from ORM models) — `schemas/{common,participant,
+      transcript,summary,action_item,meeting}.py`. **This is Gate B: the frozen API
+      contract that lets frontend and backend proceed in parallel.**
 - [ ] `GET /api/meetings` — search, filter by participant/tag/date, sort by recency, paginate
 - [ ] `GET /api/meetings/{id}` — full notebook payload
 - [ ] `GET /api/meetings/{id}/transcript`

@@ -5,7 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import models  # noqa: F401  -- imported so every mapper is registered
 from app.core.config import get_settings
-from app.core.database import Base, engine
+from app.core.database import Base, SessionLocal, engine
+from app.seed.loader import seed_database
 
 settings = get_settings()
 
@@ -15,6 +16,10 @@ async def lifespan(_app: FastAPI):
     # SQLite + a single-instance deploy means create_all is enough; there is no
     # migration story to maintain and the schema is versioned with the code.
     Base.metadata.create_all(bind=engine)
+
+    if settings.seed_on_startup:
+        with SessionLocal() as db:
+            seed_database(db)
     yield
 
 
