@@ -18,6 +18,19 @@ class Settings(BaseSettings):
     # Seeded meetings are re-created only when the meetings table is empty.
     seed_on_startup: bool = True
 
+    # LLM summarisation. Optional by design: with no key the app falls back to the
+    # deterministic extractive summariser, so a fresh clone runs green offline.
+    # Any OpenAI-compatible endpoint works; Groq is the default because it is fast
+    # and has a usable free tier.
+    llm_api_key: str | None = None
+    llm_base_url: str = "https://api.groq.com/openai/v1"
+    llm_model: str = "llama-3.3-70b-versatile"
+    llm_timeout_seconds: float = 45.0
+
+    @property
+    def llm_enabled(self) -> bool:
+        return bool(self.llm_api_key)
+
 
 @lru_cache
 def get_settings() -> Settings:

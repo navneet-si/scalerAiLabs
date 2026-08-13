@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from app import models  # noqa: F401  -- imported so every mapper is registered
 from app.core.config import get_settings
 from app.core.database import Base, SessionLocal, engine
-from app.routers import action_items, meetings, participants
+from app.routers import action_items, meetings, participants, query
 from app.seed.loader import FixtureError, seed_database
 from app.services.transcript_parser import TranscriptParseError
 
@@ -53,6 +53,7 @@ def handle_invalid_transcript(_request: Request, exc: Exception) -> JSONResponse
 app.include_router(meetings.router)
 app.include_router(participants.router)
 app.include_router(action_items.router)
+app.include_router(query.router)
 
 
 @app.get("/api/health", tags=["system"])

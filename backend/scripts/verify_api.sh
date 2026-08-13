@@ -65,7 +65,9 @@ check "duration from last cue"  "29000"  "$(echo "$VTT_JSON" | jq_py 'd["duratio
 check "distinct speakers only"  "2"      "$(echo "$VTT_JSON" | jq_py 'len(d["speakers"])')"
 check "no speaker resolved"     "True"   "$(echo "$VTT_JSON" | jq_py 'all(s["participant_id"] is None for s in d["speakers"])')"
 check "no participants invented" "0"     "$(echo "$VTT_JSON" | jq_py 'len(d["participants"])')"
-check "summary is mock-generated" "mock" "$(echo "$VTT_JSON" | jq_py 'd["summary"]["generated_by"]')"
+# Engine-agnostic on purpose: this passes on the offline extractive path and on
+# any configured LLM. Asserting "mock" would fail the moment LLM_API_KEY is set.
+check "summary records its engine"  "True" "$(echo "$VTT_JSON" | jq_py 'len(d["summary"]["generated_by"]) > 0')"
 check "keywords produced"       "True"   "$(echo "$VTT_JSON" | jq_py 'len(d["summary"]["keywords"]) > 0')"
 check "contractions not keywords" "True" "$(echo "$VTT_JSON" | jq_py $'not any(k.lower().startswith("i\'") for k in d["summary"]["keywords"])')"
 VTT_ID=$(echo "$VTT_JSON" | jq_py 'd["id"]')

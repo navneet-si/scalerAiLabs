@@ -24,3 +24,6 @@ notes/
 .DS_Store
 .idea/
 .vscode/
+
+# Handoff bundle for an external agent — working material, not a deliverable
+handoff/

@@ -5,10 +5,10 @@ extractive: every keyword, bullet, chapter and action item is lifted from
 something actually said, so an evaluator reading the summary can search the
 transcript and find the supporting line. Nothing is invented.
 
-`generate()` is the single entry point and the single swap point. Replacing the
-mock with a real LLM call means reimplementing that one function to return the
-same `GeneratedSummary`; no caller changes. That is the only reason the scoring
-helpers below are private.
+`generate()` is the single entry point. It prefers an LLM when one is configured
+and falls back to the extractive path below when it is not, or when the provider
+fails. Callers never learn which ran — only `GeneratedSummary.generated_by` says.
+That indirection is the only reason the scoring helpers below are private.
 
 Why extractive rather than templated: a templated summary ("This meeting covered
 several topics") is identical for every meeting and demos as obvious filler.
@@ -17,11 +17,17 @@ Scoring real sentences produces different output per meeting for the same cost.
 
 from __future__ import annotations
 
+import logging
+
 import re
 from collections import Counter
 from dataclasses import dataclass, field
 
+from app.core.config import get_settings
+from app.services import llm_summarizer
 from app.services.transcript_parser import ParsedSegment
+
+logger = logging.getLogger(__name__)
 
 MAX_KEYWORDS = 7
 MAX_CHAPTERS = 5
@@ -101,6 +107,8 @@ class GeneratedSummary:
     bullet_notes: list[dict] = field(default_factory=list)
     chapters: list[dict] = field(default_factory=list)
     action_items: list[dict] = field(default_factory=list)
+    # Which path produced this: "mock", or "<provider>:<model>".
+    generated_by: str = "mock"
 
 
 def _best_sentence(text: str, keywords: set[str], limit: int = 190) -> str:
@@ -263,13 +271,13 @@ def _action_items(segments: list[ParsedSegment]) -> list[dict]:
     return [item for _, item in sorted(picked, key=lambda entry: entry[0])]
 
 
-def generate(
+def generate_extractive(
     title: str,
     segments: list[ParsedSegment],
     *,
     duration_ms: int,
 ) -> GeneratedSummary:
-    """Build a summary from transcript segments. The one function to swap for an LLM."""
+    """Deterministic extractive summary. No network, no key, always available."""
     if not segments:
         raise ValueError("Cannot summarise an empty transcript")
 
@@ -294,3 +302,32 @@ def generate(
         chapters=_chapters(segments, duration_ms),
         action_items=_action_items(segments),
     )
+
+
+def generate(
+    title: str,
+    segments: list[ParsedSegment],
+    *,
+    duration_ms: int,
+) -> GeneratedSummary:
+    """Summarise a transcript, preferring an LLM and degrading to extraction.
+
+    The LLM is strictly an upgrade path: if no key is configured, or the provider
+    errors, rate-limits or returns something unusable, we fall back rather than
+    fail the ingest. A meeting is never lost because a third party was down.
+    """
+    if not segments:
+        raise ValueError("Cannot summarise an empty transcript")
+
+    settings = get_settings()
+    if settings.llm_enabled:
+        try:
+            fields = llm_summarizer.summarize(title, segments, duration_ms=duration_ms)
+            # Second-level domain: "https://api.groq.com/openai/v1" -> "groq".
+            host = settings.llm_base_url.split("//")[-1].split("/")[0].split(".")
+            provider = host[-2] if len(host) >= 2 else host[0]
+            return GeneratedSummary(**fields, generated_by=f"{provider}:{settings.llm_model}")
+        except llm_summarizer.LLMUnavailable as exc:
+            logger.warning("LLM summarisation unavailable, falling back: %s", exc)
+
+    return generate_extractive(title, segments, duration_ms=duration_ms)

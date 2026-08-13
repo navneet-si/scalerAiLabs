@@ -138,7 +138,7 @@ def _write_summary(
             overview=generated.overview,
             keywords=generated.keywords,
             bullet_notes=generated.bullet_notes,
-            generated_by="mock",
+            generated_by=generated.generated_by,
         )
     )
 

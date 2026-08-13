@@ -342,3 +342,45 @@ criteria.
 - Bash tool working directory persists between calls, which caused a `find`
   exclusion path (`./backend/.venv/*`) to miss because the cwd was already
   `backend/`.
+
+---
+
+## 2026-08-14 — UX capture pass 2: the six unknowns, resolved
+
+The first pass left six things unobserved and I had asked for help with them. Went back into
+the live app and got all six from computed styles rather than from screenshots. Findings are
+in `notes/ux-reference.md` (gitignored — the assignment repo is public and that account holds
+real meeting data; only measurements and tokens were recorded, no titles, names or content).
+
+**The one that mattered.** The active-line highlight is the core of Phase 7 and I had it
+wrong in my head. Their DOM hands over the whole model: every sentence span carries
+`cap-sent-76 cap-time-614.19--616.35 76 in-focus`.
+
+- The active unit is the **sentence**, not the segment — neighbouring sentences in the *same*
+  paragraph stay grey.
+- The highlight is **text colour only**: `#C11574` (Untitled UI Pink 700), `transition: .25s`.
+  No background tint, no left border, no weight change. The instinct to build a highlighted
+  band with a purple rule would have been wrong.
+- Through silence gaps the highlight **stays on the last spoken sentence**, so the lookup is
+  "last sentence whose `start <= t`", not "sentence whose range contains `t`".
+- **The panel never chases the playhead.** Tested it rather than assumed it: scrolled the
+  transcript to `scrollTop: 2500`, clicked a `(21:30)` link in the notes, let it play 20s.
+  The highlight tracked perfectly; `scrollTop` never moved, leaving the active line 7,000px
+  off-screen. We should follow with `scrollIntoView({block:'center'})` and suspend on manual
+  scroll — better than what they ship, and not a fidelity loss anyone would notice.
+- Clicking a notes timestamp seeks **and** starts playback. At `t = 0` nothing is highlighted.
+- The transcript is virtualized; ~10,000px of content, only the visible paragraphs in the DOM.
+
+**Corrections to pass 1.** Library rows *are* cards (white, `1px #F2F4F7`, radius **12px**,
+hover `#F9FAFB` + purple inherited text) — I had recorded them as borderless. Transcript type
+is 16px/28px, not 15px. Speaker avatars are 20px rounded squares at 4px radius, not circles.
+Buttons come in two heights, 32px and 40px, not one.
+
+**Also captured:** modal shell (backdrop `rgba(12,12,13,.56)`, panel radius 16px, the app's
+only two shadow tokens), the Meeting-info modal as our edit-metadata template, the `···` menu,
+toasts (fixed `bottom: 50px`, `#0C0C0D`, radius 8px, ~6s lifetime), the no-results empty state
+recipe, the upload page, and the settings card-per-row pattern.
+
+**Deliberately not captured:** the delete-confirmation modal (would mean opening a destructive
+dialog over someone's real meeting) and the zero-meetings empty state (would mean deleting
+data). Both are safe to design from the shell and the empty-state recipe already recorded.
