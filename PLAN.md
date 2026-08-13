@@ -9,7 +9,7 @@ output seen) — not when the code is merely written.
 
 | Phase | Name | Status |
 |---|---|---|
-| 0 | Environment & scaffold | 🟢 Done (pending `npm run dev` check) |
+| 0 | Environment & scaffold | ✅ Done — dev server verified serving 200 |
 | 1 | Database schema & models | 🟢 Done — all 9 checks verified by execution |
 | 2 | Seed data | 🟢 5 fixtures done & validated (6th dropped — see Phase 2) |
 | 3 | Backend API — read paths | ✅ Done & live-tested |
@@ -68,8 +68,8 @@ fidelity and Functionality — plus the highest-risk feature (Phase 7).
 killed one agent mid-task. Plan agent work as fewer, larger tasks rather than many small ones.
 
 ### Immediate next steps, in order
-1. **Phase 5 — frontend shell and design system.** Run the `npm run dev` smoke check first;
-   it has still never been run.
+1. **Phase 5 — frontend shell and design system.** Dev server is verified working
+   (Next 16.3.0, HTTP 200). Run `npm run build` early — dev never type-checks.
 2. **Phase 6 — meetings library view.** The API contract in `backend/app/schemas/` is frozen,
    so this needs no further backend work.
 3. **Phase 7 — the player/transcript sync.** **Do this personally, not via an agent** — one
@@ -86,7 +86,7 @@ killed one agent mid-task. Plan agent work as fewer, larger tasks rather than ma
 
 ---
 
-## Phase 0 — Environment & scaffold 🟡
+## Phase 0 — Environment & scaffold ✅
 
 Get a reproducible Python/Node toolchain and the repo skeleton the deliverable
 requires (`frontend/` + `backend/`).
@@ -97,7 +97,9 @@ requires (`frontend/` + `backend/`).
 - [x] `.gitignore` (excludes `.venv`, `node_modules`, `*.db`, `.env`, `notes/`)
 - [x] `git init` + initial commit (`ab349bb`)
 - [x] Frontend scaffold (`create-next-app`, TypeScript + Tailwind, App Router, `src/`)
-- [ ] `npm run dev` smoke check
+- [x] `npm run dev` smoke check — Next 16.3.0 + Turbopack, HTTP 200, no errors
+- [ ] `npm run build` — **not yet run**; dev is lenient, the production build is
+      what type-checks, so this is an unverified gap
 
 **Exit criteria:** image builds and imports succeed (✅ — build exited 0 on
 `python:3.12-slim`, cp312 wheels resolved); `npm run dev` serves the starter.
