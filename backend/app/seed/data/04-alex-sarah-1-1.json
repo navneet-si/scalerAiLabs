@@ -1,0 +1,88 @@
+{
+  "title": "Sarah & Alex Weekly 1:1",
+  "description": "Manager check-in on workload after the Q3 scope cuts, feedback on a recent incident review, and a path toward senior scope.",
+  "days_ago": 5,
+  "time": "16:00",
+  "duration_ms": 416000,
+  "tags": ["1:1", "Career"],
+  "organizer": "Sarah Chen",
+  "participants": [
+    { "name": "Sarah Chen", "email": "sarah.chen@northwind.io", "color": "#6366f1", "role": "host" },
+    { "name": "Alex Rivera", "email": "alex.rivera@northwind.io", "color": "#ec4899", "role": "attendee" }
+  ],
+  "summary": {
+    "overview": "Sarah checked in with Alex on workload after the Q3 scope cuts, and Alex was direct that two weeks of splitting time between the support runbook and Marcus's chart migration had left neither one done well; Sarah owned the reassignment decision and moved the chart work to Priya's team so Alex can finish the runbook. Sarah then gave feedback on the sync-engine incident review Alex ran, praising the retry-storm root-cause work but flagging that cutting Marcus off twice during a timeline disagreement made two other people go quiet for the rest of the call. Alex pushed back that the interruption was about time pressure in a meeting already running long, not disagreement for its own sake, and Sarah agreed the redirect itself was right while maintaining that the delivery cost the room's trust. The conversation turned to promotion: Sarah said Alex is already doing senior-level work and that what's missing is consistency and visibility rather than new skills, pointing to the informal mentoring newer teammates already seek from Alex. They closed with Sarah committing to draft a formal scope proposal for the next promo cycle and to stop reassigning work onto Alex without checking first.",
+    "keywords": ["scope cuts", "support runbook", "chart migration", "incident review", "retry-storm bug", "senior promotion"],
+    "bullet_notes": [
+      {
+        "title": "Workload and reassignment",
+        "points": [
+          "Alex has been splitting time between the support runbook and Marcus's chart migration since the Q3 scope cuts, with neither getting full attention.",
+          "Sarah takes responsibility for approving the reassignment without asking what would give on Alex's side.",
+          "The chart migration moves to Priya's team with a one-day handoff pairing session, so Alex can finish the runbook."
+        ]
+      },
+      {
+        "title": "Incident review feedback",
+        "points": [
+          "The root-cause analysis and the retry-storm pattern Alex found were called out as strong technical work.",
+          "Sarah's feedback: Alex cut Marcus off twice during a timeline disagreement, and two other attendees went quiet afterward.",
+          "Alex pushed back that the redirect was about time pressure, not the disagreement; Sarah agreed the redirect was right but said the delivery cost the room."
+        ]
+      },
+      {
+        "title": "Career growth toward senior",
+        "points": [
+          "Sarah says Alex is functionally doing senior-level work already; what's missing is consistency and visibility, not new skills.",
+          "Newer teammates already come to Alex instead of their own leads for runbook questions - informal mentoring Sarah wants to formalize.",
+          "Sarah commits to drafting a scope proposal (incident command plus runbook ownership) for the next promo cycle, and to stop piling on reassignments without checking first."
+        ]
+      }
+    ]
+  },
+  "chapters": [
+    { "title": "Workload triage after the scope cuts", "gist": "Sarah asks how Alex is really doing; Alex says splitting time between the support runbook and Marcus's chart migration since the scope cuts has left neither one done well, and Sarah moves the chart work to Priya's team so Alex can finish the runbook.", "start_ms": 0, "end_ms": 163000 },
+    { "title": "Incident review debrief", "gist": "Sarah reviews the sync-engine incident review Alex ran, praising the retry-storm root-cause work but flagging that cutting Marcus off twice made two other people go quiet; Alex pushes back that it was about time pressure, and Sarah agrees the redirect was right while holding that the delivery cost the room.", "start_ms": 163000, "end_ms": 254000 },
+    { "title": "From feedback to a growth conversation", "gist": "Alex asks directly what it takes to reach senior; Sarah says the work is already there and what's missing is consistency and visibility, pointing to the facilitation in the incident review and the informal mentoring newer teammates already seek from Alex.", "start_ms": 254000, "end_ms": 344000 },
+    { "title": "A concrete scope and promotion plan", "gist": "Sarah commits to a formal scope proposal covering incident command and runbook ownership for the next promo cycle, Alex asks for fewer surprise reassignments in return, and they set next steps before the runbook draft is due Friday.", "start_ms": 344000, "end_ms": 414500 }
+  ],
+  "action_items": [
+    { "text": "Move the chart migration work to Priya's team, with a one-day pairing handoff for Alex", "assignee": "Sarah Chen", "due_in_days": 1, "is_done": true },
+    { "text": "Finish and send the support runbook draft", "assignee": "Alex Rivera", "due_in_days": 4, "is_done": false },
+    { "text": "Write up a scope proposal covering incident command and formal runbook ownership for the promo committee", "assignee": "Sarah Chen", "due_in_days": 10, "is_done": false },
+    { "text": "Use a 'hang on, let me push back' framing instead of interrupting when redirecting a meeting", "assignee": "Alex Rivera", "due_in_days": 7, "is_done": false }
+  ],
+  "segments": [
+    { "speaker": "Sarah Chen", "start_ms": 0, "end_ms": 12000, "text": "Hey Alex, thanks for making the time — I know Thursdays are usually packed for you between support triage and everything else. How are you doing, actually, not the standup version of the answer?" },
+    { "speaker": "Alex Rivera", "start_ms": 12000, "end_ms": 25000, "text": "Honestly? Tired, and a little frustrated if I'm being straight with you. It's been a rough few weeks since the scope cuts landed, and I don't think anyone actually planned for what happens to my time." },
+    { "speaker": "Sarah Chen", "start_ms": 25000, "end_ms": 37000, "text": "Say more about that. When you say it landed on your plate, walk me through what actually shifted week to week, because I want the specifics, not the general shape of it." },
+    { "speaker": "Alex Rivera", "start_ms": 37000, "end_ms": 60000, "text": "Sure. After we cut the custom-metrics builder in the roadmap review, Marcus needed help finishing the chart migration, so about half my sprint got reassigned onto that. But nobody took the support runbook off my plate to make room for it. So for two weeks I've been splitting time between query code and support escalations, and neither one is getting my full attention." },
+    { "speaker": "Sarah Chen", "start_ms": 60000, "end_ms": 73000, "text": "That's on me, not you. I approved that reassignment in the roadmap review without asking what would actually give on your side. I should have asked what you'd drop before I said yes to Marcus." },
+    { "speaker": "Alex Rivera", "start_ms": 73000, "end_ms": 90000, "text": "I appreciate you saying that, genuinely. I didn't want to just complain without a fix in mind, but it's been two weeks of context-switching between an incident runbook and query code, and I don't think either one is coming out as good as it should." },
+    { "speaker": "Sarah Chen", "start_ms": 90000, "end_ms": 103000, "text": "Okay, let's actually fix it today instead of just acknowledging it. If you had to pick exactly one, which matters more to you right now — finishing the runbook, or the chart work with Marcus?" },
+    { "speaker": "Alex Rivera", "start_ms": 103000, "end_ms": 117000, "text": "The runbook, honestly. It's overdue, support has been asking about it for two weeks, and I actually care about getting it right. But I was told the chart migration was the real priority because Marcus is blocked without it." },
+    { "speaker": "Sarah Chen", "start_ms": 117000, "end_ms": 131000, "text": "Then that's wrong information, and I'll fix it today. I'll pull the chart work off you and hand it to Priya's team — they've got the bandwidth this sprint that you don't. You finish the runbook, full stop." },
+    { "speaker": "Alex Rivera", "start_ms": 131000, "end_ms": 142000, "text": "Does Priya's team have context on the migration already, or will I need to spend a day walking someone through it before I can actually let go of it?" },
+    { "speaker": "Sarah Chen", "start_ms": 142000, "end_ms": 153000, "text": "One day, tops. I'll ask Priya to pair with you tomorrow morning specifically so the handoff doesn't eat your whole week. That's a fair trade for getting the runbook back." },
+    { "speaker": "Alex Rivera", "start_ms": 153000, "end_ms": 163000, "text": "That would actually help a lot. Thank you — I wasn't sure how to bring this up without sounding like I was just dodging the chart work." },
+    { "speaker": "Sarah Chen", "start_ms": 165000, "end_ms": 178000, "text": "You weren't dodging anything, you were drowning. Okay — now I want to shift to something else. I want to talk about the incident review you ran last Tuesday, the sync engine timeout. Can we go there?" },
+    { "speaker": "Alex Rivera", "start_ms": 178000, "end_ms": 187000, "text": "Sure. I thought it went fine, honestly — we got to root cause and had a clear action plan by the end of the hour." },
+    { "speaker": "Sarah Chen", "start_ms": 187000, "end_ms": 201000, "text": "The root cause analysis was genuinely strong — finding the retry-storm pattern in the logs was sharp work, and I mean that. My feedback isn't about the technical output at all. It's about how the room felt by the end." },
+    { "speaker": "Alex Rivera", "start_ms": 201000, "end_ms": 203000, "text": "What do you mean by that?" },
+    { "speaker": "Sarah Chen", "start_ms": 203000, "end_ms": 217000, "text": "When Marcus pushed back on your timeline theory, you cut him off twice before he finished a sentence. I watched two other people go quiet right after that and just stop offering ideas for the rest of the call." },
+    { "speaker": "Alex Rivera", "start_ms": 217000, "end_ms": 234000, "text": "I hear that, but I was cutting him off because his theory didn't fit the timestamps in the logs, and we were already forty minutes into a meeting that was supposed to take thirty. I was trying to keep us moving, not shut him down." },
+    { "speaker": "Sarah Chen", "start_ms": 236000, "end_ms": 254000, "text": "That's fair, actually — you were right that his theory didn't hold up, and forty minutes in, someone needed to redirect the room. I'm not telling you not to redirect. I'm telling you that how you did it cost you the room's trust for the rest of the call." },
+    { "speaker": "Alex Rivera", "start_ms": 254000, "end_ms": 263000, "text": "Okay, that lands differently than I expected. So it's not that I disagreed with him, it's that I didn't leave any space before jumping in." },
+    { "speaker": "Sarah Chen", "start_ms": 263000, "end_ms": 279000, "text": "Exactly. Something as small as 'hang on, let me push back on that' buys you the same speed without the room shutting down. It's a small adjustment, but it's the difference between running a meeting and running over the people in it." },
+    { "speaker": "Alex Rivera", "start_ms": 279000, "end_ms": 287000, "text": "That's genuinely useful, I'll try that next time. Is there anything else from that review, or was that the main thing?" },
+    { "speaker": "Sarah Chen", "start_ms": 287000, "end_ms": 303000, "text": "One more thing, and this one's a real compliment: the way you structured the action items with clear owners and dates was tighter than most reviews I run myself. That's exactly the senior-level facilitation I actually want to talk to you about next." },
+    { "speaker": "Alex Rivera", "start_ms": 303000, "end_ms": 317000, "text": "Let's talk about it then, because I've been meaning to ask you directly — what does it actually take to get to senior from where I am? I feel like I'm already doing a lot of that work." },
+    { "speaker": "Sarah Chen", "start_ms": 317000, "end_ms": 333000, "text": "You are doing a lot of it, that's not in question. Technically, you're basically already there. What's missing is consistency and visibility — this incident review is the proof point. When you run one like that every time, not just when it's high-stakes, that's senior." },
+    { "speaker": "Alex Rivera", "start_ms": 333000, "end_ms": 344000, "text": "So it's less about learning new skills and more about doing the thing I already know how to do, reliably, in the smaller reviews too, not just the dramatic ones." },
+    { "speaker": "Sarah Chen", "start_ms": 344000, "end_ms": 370000, "text": "Right. And owning scope beyond your own lane — right now support runbooks and incident reviews land on you by default because you're good at them, not because they were ever formally assigned. Same with the mentoring — a couple of the newer folks already ping you instead of their own leads. I want to make all of that official instead of it just happening to you every time something's on fire." },
+    { "speaker": "Alex Rivera", "start_ms": 370000, "end_ms": 382000, "text": "I'd take that, as long as it comes with fewer surprise reassignments like the chart migration thing today. I can't build a real case for senior if I'm underwater every single sprint." },
+    { "speaker": "Sarah Chen", "start_ms": 382000, "end_ms": 396000, "text": "Deal. I'll write up a scope proposal — incident command plus formal runbook ownership — and take it to the promo committee next cycle. And I'll be a lot more careful about what I pile onto you before checking first." },
+    { "speaker": "Alex Rivera", "start_ms": 396000, "end_ms": 401000, "text": "Sounds good. I feel a lot better than I did twenty minutes ago, honestly." },
+    { "speaker": "Sarah Chen", "start_ms": 402500, "end_ms": 414500, "text": "Good, that's the point of these. Same time next week — and send me the runbook draft before Friday so I can get the chart work off your plate today, not next sprint." }
+  ]
+}

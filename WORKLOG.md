@@ -197,6 +197,86 @@ Next.js scaffold) before starting Phase 1 verification.
 - Applied immediately: `requirements.txt` was reviewed against every remaining phase and
   frozen (see PLAN.md → Phase 0 → Dependency freeze), so exactly **one** rebuild remains.
 
+### 15. Phase 1 verified — Gate A opened
+- Rebuilt with `email-validator` (exit 0) and ran `verify_schema.py`. **All 9 checks pass.**
+- Two issues found and fixed while verifying, rather than tolerated:
+  - `verify_schema.py` failed with `ModuleNotFoundError: No module named 'app'`. Python puts
+    the *script's* directory on `sys.path`, not the working directory. I first patched this
+    with a `-e PYTHONPATH=/srv` flag, which fixes one invocation and leaves the script broken
+    for anyone running it as documented. Replaced with a `sys.path.insert()` bootstrap in the
+    file itself, then re-ran using the documented command to prove the fix.
+  - `SAWarning: Object of type <Meeting> not in session` from `loader.py` — caused by
+    assigning `meeting.participants` before `db.add(meeting)`. Confirmed the join rows *did*
+    persist (4 `meeting_participants` rows, correct organizer and tags), so it was benign in
+    effect, but reordered the `db.add()` to remove it.
+- **Correction:** fixture 1 has **41** segments, not the 45 I stated earlier. Records fixed.
+
+### 16. Fixture fan-out launched (5 parallel Sonnet agents)
+- One agent per fixture: sales discovery, engineering standup, 1:1, customer interview,
+  design review. Each was given `FORMAT.md`, fixture 01 as reference, a **canonical
+  participant roster** (fixed names/emails/colors so dedup-on-email works and avatar colours
+  stay consistent across meetings), the hard invariants, and a per-meeting brief.
+- Agents were told explicitly not to run docker or any DB command and not to touch other
+  files — validation happens centrally once they land, so five concurrent containers don't
+  fight over the image and database.
+
+### 17. Read-path API built and live-tested (my own work, parallel to the agents)
+- `services/meeting_service.py` — filtering, sorting, pagination; **one aggregate query per
+  page** for action-item counts instead of per-row lookups (avoids N+1); `selectinload` for
+  participants/tags/speakers/chapters/summary/action-items.
+- `routers/meetings.py`, `routers/participants.py`; both wired into `main.py`.
+- Bug caught immediately after writing: I used
+  `func.sum(func.cast(~ActionItem.is_done, type_=func.count().type))`, which is not valid
+  SQLAlchemy. Replaced with `func.sum(case((ActionItem.is_done.is_(False), 1), else_=0))`.
+- **Verified against a live container** (port 8199): health OK; list returns participants
+  with initials and colours; `?search=priya` matches by *participant name* (total 1);
+  unknown search returns 0; `/api/me` returns the flagged current user; transcript returns
+  duration 468000 with 4 speakers and 41 segments; unknown meeting id returns 404; server
+  log clean of errors and warnings.
+- Still to re-check: the computed `action_item_count` / `has_summary` fields, once more than
+  one fixture exists — that aggregate is the least-exercised code path.
+
+### 18. Independent fixture validation
+- Wrote `scripts/validate_fixtures.py` rather than trusting the agents' self-reports. It
+  re-runs the loader's own `validate_fixture()` on every file, and adds **cross-fixture
+  checks no single agent could perform**:
+  - the same email appearing with two different names or colours (participants dedupe on
+    email, so a conflict would give one participant an identity that depends on load order),
+  - the same person name mapped to two different emails,
+  - duplicate meeting titles,
+  - more than 5s of dead air between the last segment and `duration_ms`.
+- Result on the fixtures delivered so far: **all valid, no conflicts.** The canonical-roster
+  instruction in the agent briefs did its job — 7 distinct participants, no identity drift.
+
+### 19. Aggregate query verified against real data
+- The `case()` aggregate flagged in entry 17 now checked across 4 meetings: list-endpoint
+  `action_item_count` / `open_action_item_count` cross-checked against the detail endpoint's
+  raw arrays — exact match on every meeting (4/3, 5/3, 4/3). `has_summary` true throughout.
+- Also verified `sort=oldest` returns ascending dates and `?tag=Engineering` filters to one
+  meeting. Server log clean.
+
+### 20. Fan-out outcome — 5 of 6 fixtures delivered
+| Fixture | Agent outcome | Validated |
+|---|---|---|
+| `02-enterprise-sales-discovery-call.json` | agent **stopped by user** — but the file had already been written | ✅ valid |
+| `03-engineering-standup.json` | completed | ✅ valid |
+| `04-alex-sarah-1-1.json` | completed | ✅ valid |
+| `05-customer-onboarding-interview.json` | completed | ✅ valid |
+| `06-notebook-redesign-review.json` | **FAILED — API session limit reached** (resets 05:30 Asia/Kolkata) | ✗ not written |
+
+- Final validation across all 5 delivered fixtures: **all valid, zero cross-fixture
+  conflicts**, 10 distinct participants, 174 transcript segments, 22 chapters, 22 action
+  items. Every `duration_ms` derives from real segment ends (tails 1500–2500ms).
+- The canonical-roster instruction worked: no email/name/colour drift between agents, which
+  was the main risk of parallelising this.
+- **New constraint discovered: the account has an API session limit that resets at 05:30
+  Asia/Kolkata.** This bounds how much parallel agent work is available per session and must
+  be planned around — prefer fewer, larger agent tasks over many small ones from here.
+
+### 21. Work paused for documentation
+- User asked to stop and bring documentation current. No further build work performed after
+  this point; `README.md` written covering setup, architecture, schema and API.
+
 ### Environment quirks worth remembering
 - Shell is **zsh**: unquoted `$var` does **not** word-split. An early
   permission-probe loop passed `"aws iam list-... "` as a single argument and

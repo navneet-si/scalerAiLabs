@@ -1,0 +1,94 @@
+{
+  "title": "Customer Onboarding Interview: Brightpath Logistics",
+  "description": "A candid research interview with an existing customer about the rocky first two months of onboarding and what eventually turned it around.",
+  "days_ago": 8,
+  "time": "11:00",
+  "duration_ms": 433200,
+  "tags": ["Research", "Onboarding"],
+  "organizer": "Priya Nair",
+  "audio_url": null,
+  "participants": [
+    { "name": "Priya Nair", "email": "priya.nair@northwind.io", "color": "#10b981", "role": "host" },
+    { "name": "Rebecca Lin", "email": "rebecca.lin@northwind.io", "color": "#a855f7", "role": "attendee" },
+    { "name": "Dana Whitfield", "email": "dana.whitfield@brightpathlogistics.com", "color": "#f97316", "role": "attendee" }
+  ],
+  "summary": {
+    "overview": "Priya interviewed Dana Whitfield, operations manager at Brightpath Logistics, about her team's onboarding experience. The rollout stalled almost immediately at data import, where the app asked for 'zone ID' field mappings that were never explained in the setup guide, and the broader documentation assumed customers already knew Northwind's internal vocabulary. Of the five seats Brightpath purchased, two dispatch-coordinator seats have never been used, and Dana admits she is still unsure whether that is a training gap or a genuine mismatch. The account nearly churned in month two after a failed re-import and a finance spend review, and Dana had a cancellation email drafted before an unprompted check-in from Rebecca and a support engineer's screen-share session turned things around. Dana closed by saying she'd still recommend the product, but only if a peer budgets a full week for data import and insists on a live onboarding call up front.",
+    "keywords": ["data import", "zone ID mapping", "onboarding glossary", "seat utilization", "near-churn", "support escalation", "automated reporting"],
+    "bullet_notes": [
+      {
+        "title": "Onboarding friction",
+        "points": [
+          "Data import stalled for days over undefined 'zone ID' fields never explained in the setup guide.",
+          "Documentation assumes prior knowledge of terms like carrier integration, shipping profile, and rate card, with no glossary.",
+          "Two screenshots in the docs still show an outdated sidebar layout that no longer exists."
+        ]
+      },
+      {
+        "title": "Seat adoption",
+        "points": [
+          "Two of five purchased seats, both dispatch coordinators, have essentially never logged in.",
+          "Dana isn't sure if it's a training gap or dispatch genuinely not needing the reporting side.",
+          "Brightpath is considering downgrading from five licenses to three at the next renewal."
+        ]
+      },
+      {
+        "title": "Near-churn and recovery",
+        "points": [
+          "In month two, finance flagged the subscription during a spend review and Dana drafted a cancellation email.",
+          "Dana briefly evaluated a competitor, ShipTrack, but the sunk cost of the data import made switching feel worse than staying.",
+          "An unprompted check-in from Rebecca and a support engineer's screen-share, including a custom zone ID conversion script, reversed the decision."
+        ]
+      }
+    ]
+  },
+  "chapters": [
+    { "title": "Framing the interview", "gist": "Priya explains the research goal and invites Dana to be candid about the rough parts of onboarding rather than flattering.", "start_ms": 0, "end_ms": 26800 },
+    { "title": "The data import stall", "gist": "Dana walks through the CSV import breaking down over unexplained 'zone ID' mappings, and Rebecca recognizes it as an internal naming problem the docs never translated.", "start_ms": 26800, "end_ms": 128700 },
+    { "title": "Two unused seats", "gist": "Dana admits two dispatch seats never got used and second-guesses whether that's a training gap or dispatch simply not needing the tool.", "start_ms": 128700, "end_ms": 177800 },
+    { "title": "The near-cancellation and the rescue", "gist": "Dana describes drafting a cancellation email in month two, briefly evaluating a competitor, and being saved by an unprompted check-in and a support engineer's screen-share fix.", "start_ms": 177800, "end_ms": 326700 },
+    { "title": "What would have helped, and what's working now", "gist": "Dana names the fixes she wants — a live kickoff call and a glossary — and closes on the automated reporting that now saves her ops lead hours every week.", "start_ms": 326700, "end_ms": 431200 }
+  ],
+  "action_items": [
+    { "text": "Build a one-page glossary defining carrier integration, shipping profile, and rate card in plain terms", "assignee": "Rebecca Lin", "due_in_days": 14, "is_done": false },
+    { "text": "Add a mandatory live kickoff walkthrough before data import to the standard onboarding flow", "assignee": "Rebecca Lin", "due_in_days": 5, "is_done": true },
+    { "text": "Send Dana the zone ID field-mapping doc and the carrier integration cheat sheet discussed on the call", "assignee": "Rebecca Lin", "due_in_days": 3, "is_done": false },
+    { "text": "Revisit the five-seat license count at renewal and consider downgrading to three", "assignee": "Dana Whitfield", "due_in_days": 45, "is_done": false }
+  ],
+  "segments": [
+    { "speaker": "Priya Nair", "start_ms": 0, "end_ms": 13500, "text": "Thanks so much for making time, Dana. This is just for our product research library — nothing you say here needs to be flattering. I'd actually rather hear the rough parts of onboarding than the smooth ones." },
+    { "speaker": "Dana Whitfield", "start_ms": 13900, "end_ms": 20900, "text": "Ha, good, because I have rough parts. Overall we're happy now, but the first six weeks were genuinely rocky." },
+    { "speaker": "Priya Nair", "start_ms": 21300, "end_ms": 26800, "text": "Let's start at the beginning. Walk me through what the first two weeks actually looked like." },
+    { "speaker": "Dana Whitfield", "start_ms": 27200, "end_ms": 53700, "text": "The kickoff call was great, honestly — your rep was sharp, showed us the dashboard, we were excited. Then we got to the actual data import step, and that's where things fell apart. We had about eighteen months of shipment records in a warehouse management export, and the import wizard wanted us to map fields to something called 'zone IDs' that we'd never heard of and that weren't explained anywhere in the app." },
+    { "speaker": "Priya Nair", "start_ms": 54100, "end_ms": 60100, "text": "When you say 'zone IDs' weren't explained — was that missing from the docs, or just confusing?" },
+    { "speaker": "Dana Whitfield", "start_ms": 60500, "end_ms": 83000, "text": "Missing. The setup guide assumed you already knew our own schema, which is backwards — it said 'enter your zone ID mapping' like that was a field we'd fill in from memory. We ended up guessing, importing wrong, and re-importing three times over about four days before someone on our side figured out zone IDs meant your internal warehouse groupings, not ours." },
+    { "speaker": "Rebecca Lin", "start_ms": 83400, "end_ms": 95900, "text": "I remember that ticket. It came in as 'import broken,' but when we dug in it was really a naming problem — we call it zone ID internally and never translated that for customers." },
+    { "speaker": "Priya Nair", "start_ms": 96300, "end_ms": 101300, "text": "That's a good example of what I'm here to dig into. What else assumed prior knowledge?" },
+    { "speaker": "Dana Whitfield", "start_ms": 101700, "end_ms": 128700, "text": "The whole doc set, honestly. There's no glossary. It jumps straight into 'configure your carrier integration' without ever saying what a carrier integration is versus a shipping profile versus a rate card — we use all three words for slightly different things internally and the docs use them interchangeably. And two of the screenshots still show a sidebar layout that doesn't exist anymore, so I spent ten minutes looking for a button that had moved." },
+    { "speaker": "Priya Nair", "start_ms": 129100, "end_ms": 133600, "text": "Let's talk seats. You bought five. How's utilization actually looked since launch?" },
+    { "speaker": "Dana Whitfield", "start_ms": 134000, "end_ms": 154500, "text": "Honestly, two of the five have basically never logged in. Our dispatch coordinators were supposed to use it daily, but after the rocky start they just went back to their old spreadsheet exports and never came back. It's my ops lead and me who live in the tool now, plus one coordinator who actually likes it." },
+    { "speaker": "Priya Nair", "start_ms": 154900, "end_ms": 159900, "text": "Do you think that's a training gap, or that they just don't need it?" },
+    { "speaker": "Dana Whitfield", "start_ms": 160300, "end_ms": 177800, "text": "Mostly they didn't need it, I'd say — dispatch doesn't touch the reporting side. Although... actually, thinking about it more, if the onboarding had walked them through the mobile view specifically, I bet at least one of them would have adopted it. So maybe it is partly training." },
+    { "speaker": "Priya Nair", "start_ms": 178200, "end_ms": 183700, "text": "Let's go back to the rocky start. I heard there was a point you nearly cancelled." },
+    { "speaker": "Dana Whitfield", "start_ms": 184100, "end_ms": 212100, "text": "Yeah, month two. We'd just had the third failed re-import, my dispatch team was grumbling, and finance flagged the subscription during a routine spend review asking why we were paying for a tool half of us weren't using. I told my VP I wanted to cancel and eat the setup cost as a loss. I actually had the cancellation email drafted. I didn't send it because Rebecca called me that same afternoon, completely unprompted, just checking in." },
+    { "speaker": "Rebecca Lin", "start_ms": 212500, "end_ms": 227500, "text": "I didn't even know about the cancellation email — I was just doing a routine thirty-day check-in. But when Dana told me about the zone ID mess, I knew immediately we needed an engineer on the call, not another support ticket." },
+    { "speaker": "Priya Nair", "start_ms": 227900, "end_ms": 230400, "text": "What happened on that call?" },
+    { "speaker": "Dana Whitfield", "start_ms": 230800, "end_ms": 257300, "text": "A support engineer — Theo, I think — got on a screen share within the hour. He didn't just fix our import; he wrote us a small conversion script that translates our warehouse zone codes into your zone IDs automatically, so we never have to hand-map again. He also spent forty minutes just explaining what a carrier integration actually was, in plain English. That's the best support interaction I've had with any vendor." },
+    { "speaker": "Priya Nair", "start_ms": 257700, "end_ms": 262700, "text": "Did usage pick back up after that, or had the damage already been done?" },
+    { "speaker": "Dana Whitfield", "start_ms": 263100, "end_ms": 283600, "text": "It picked up, mostly. My ops lead went from dreading the tool to actually recommending it in our ops Slack. Though I'll be honest, we never got those two dispatch seats back — we still pay for five licenses and use three, and at some point I should probably just downgrade instead of hoping they'll come around." },
+    { "speaker": "Priya Nair", "start_ms": 284000, "end_ms": 291500, "text": "You mentioned almost cancelling. Did you look at other vendors during that month, or was it more about giving up entirely?" },
+    { "speaker": "Dana Whitfield", "start_ms": 291900, "end_ms": 316400, "text": "We did, actually. I spent a weekend looking at a competitor called ShipTrack — pricing was almost identical, and their demo looked cleaner, honestly. But by then we'd already sunk two and a half weeks into mapping our data to your schema, and starting that over with a different vendor felt worse than just being annoyed at the current one. So it was partly inertia, I'll admit." },
+    { "speaker": "Priya Nair", "start_ms": 316800, "end_ms": 321800, "text": "What tipped it in the end — the pricing comparison, or the support call?" },
+    { "speaker": "Dana Whitfield", "start_ms": 322200, "end_ms": 326700, "text": "Honestly, the support call. The pricing comparison was a wash either way." },
+    { "speaker": "Priya Nair", "start_ms": 327100, "end_ms": 331600, "text": "What would have prevented the near-cancellation in the first place, looking back?" },
+    { "speaker": "Dana Whitfield", "start_ms": 332000, "end_ms": 354000, "text": "Two things. A live onboarding call before the data import, not just a self-serve guide — even thirty minutes with someone walking us through zone IDs would have saved that whole week. And a glossary. Just one page defining carrier integration, shipping profile, and rate card in plain terms would have prevented half of my team's confusion in the first month." },
+    { "speaker": "Rebecca Lin", "start_ms": 354400, "end_ms": 365900, "text": "That's useful, and honestly overdue feedback — we changed the kickoff flow for new accounts back in March to include a mandatory live walkthrough, but we haven't built the glossary yet." },
+    { "speaker": "Priya Nair", "start_ms": 366300, "end_ms": 369800, "text": "Setting the rocky start aside, what's actually working well now?" },
+    { "speaker": "Dana Whitfield", "start_ms": 370200, "end_ms": 386200, "text": "The automated reporting, genuinely. My ops lead used to spend about four hours every Friday building a shipment status report by hand. Now it's basically instant, and she's started sharing it with our finance team too, which wasn't even something we asked for initially." },
+    { "speaker": "Priya Nair", "start_ms": 386600, "end_ms": 392100, "text": "If a peer at another logistics company asked whether to sign up, what would you tell them?" },
+    { "speaker": "Dana Whitfield", "start_ms": 392500, "end_ms": 405500, "text": "I'd say sign up, but budget a full week for data import, not a day, and ask for a live onboarding call up front. Don't let the self-serve guide be the first thing your team touches." },
+    { "speaker": "Priya Nair", "start_ms": 405900, "end_ms": 410400, "text": "That's a great line, thank you. Any last thoughts before we wrap?" },
+    { "speaker": "Dana Whitfield", "start_ms": 410800, "end_ms": 419300, "text": "Just that we're glad we stuck it out. It was a rough two months, but the product underneath the rough onboarding is genuinely good." },
+    { "speaker": "Rebecca Lin", "start_ms": 419700, "end_ms": 431200, "text": "Thank you for being candid, Dana, that helps us more than a glowing review would. I'll send over the two docs we discussed and follow up on the seat count next week." }
+  ]
+}

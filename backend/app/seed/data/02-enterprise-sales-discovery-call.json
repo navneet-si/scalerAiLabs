@@ -1,0 +1,101 @@
+{
+  "title": "Enterprise Sales Discovery Call: Meridian Health",
+  "description": "Discovery call with a healthcare prospect surfacing pricing pushback, a security review, and an open Flowline migration risk.",
+  "days_ago": 2,
+  "time": "14:30",
+  "duration_ms": 426000,
+  "tags": ["Sales", "Discovery"],
+  "organizer": "Daniel Okafor",
+  "participants": [
+    { "name": "Daniel Okafor", "email": "daniel.okafor@northwind.io", "color": "#06b6d4", "role": "host" },
+    { "name": "Alex Rivera", "email": "alex.rivera@northwind.io", "color": "#ec4899", "role": "attendee" },
+    { "name": "Jordan Blake", "email": "jordan.blake@meridianhealth.com", "color": "#8b5cf6", "role": "attendee" },
+    { "name": "Taylor Simmons", "email": "taylor.simmons@meridianhealth.com", "color": "#ef4444", "role": "attendee" }
+  ],
+  "summary": {
+    "overview": "Northwind's Daniel Okafor and Alex Rivera ran a discovery call with Meridian Health's Jordan Blake and Taylor Simmons, who are replacing their three-year-old Flowline deployment after repeated EHR sync failures and the loss of Flowline's roadmap following an acquisition. Jordan pushed back hard on Northwind's list price of $94 per seat, which would put a 450-seat rollout over $500,000 a year versus Flowline's sub-$200,000 cost, and the group worked out a seat-tiered model — roughly 100 full seats plus 350 viewer seats — landing closer to $240,000. Taylor, leading Meridian's first formal vendor security review, confirmed Northwind has a current SOC 2 Type II report, a HIPAA BAA, and Okta SSO with SCIM, but raised an unresolved concern: whether three years of Flowline history can migrate without breaking the audit trail Meridian's retention rules require. The call ended without a decision — Northwind will send a seat-tiered proposal and compliance documents this week, Alex will set up a migrations-engineer session on the audit-trail question, and Meridian's procurement committee still needs six to eight weeks once security clears.",
+    "keywords": ["Flowline migration", "seat-tiered pricing", "SOC 2 Type II", "SSO and SCIM", "audit trail", "procurement timeline", "sync reliability"],
+    "bullet_notes": [
+      {
+        "title": "Why Meridian is evaluating now",
+        "points": [
+          "Flowline's API rate limits break the nightly EHR sync roughly twice a month, forcing manual spreadsheet reconciliation.",
+          "Flowline's parent company was acquired in June and Meridian can no longer get a roadmap from them.",
+          "This is Meridian's first formal vendor security review; it was skipped when Flowline was originally purchased."
+        ]
+      },
+      {
+        "title": "Pricing outcome",
+        "points": [
+          "List price of $94/seat/month would put 450 seats over $500,000 a year versus Flowline's sub-$200,000.",
+          "Proposed seat-tiered model: roughly 100 full seats plus 350 viewer seats at $18 each, landing near $240,000 a year.",
+          "Daniel will send the seat-tiered proposal broken out in writing rather than a single headline number."
+        ]
+      },
+      {
+        "title": "Security review and open risk",
+        "points": [
+          "Northwind has a current SOC 2 Type II (renewed March), a signed BAA, and SAML SSO via Okta with SCIM deprovisioning.",
+          "Unresolved: whether three years of Flowline history can migrate without breaking the audit trail required for data retention.",
+          "Meridian's procurement cycle is six to eight weeks after security clears, with a biweekly committee cadence."
+        ]
+      }
+    ]
+  },
+  "chapters": [
+    { "title": "Discovery: why Meridian is looking now", "gist": "Jordan frames the multi-vendor evaluation while Taylor and Jordan describe Flowline's sync failures, the parent-company acquisition, and a new formal security review.", "start_ms": 0, "end_ms": 98500 },
+    { "title": "Demo: sync reliability and rate limits", "gist": "Alex walks through the workspace and shows how queued writes avoid the silent data loss Flowline suffers from; Daniel commits to sending the exact rate-limit numbers in writing.", "start_ms": 98500, "end_ms": 169000 },
+    { "title": "Pricing objection and seat-tiered math", "gist": "Jordan challenges the $500K sticker price against Flowline's sub-$200K cost, and the group works out a seat-tiered model with viewer licenses that lands near $240K.", "start_ms": 169000, "end_ms": 270500 },
+    { "title": "Security review, SSO, and the audit-trail gap", "gist": "Taylor confirms SOC 2 and HIPAA/BAA requirements and SSO via Okta, then raises whether three years of Flowline history can migrate without breaking the audit trail — a question Daniel can't answer on the spot.", "start_ms": 270500, "end_ms": 351500 },
+    { "title": "Next steps and procurement timeline", "gist": "The call closes on a migrations-engineer session, Daniel's seat-tiered proposal, and Meridian's six-to-eight-week procurement cycle, with the audit-trail question still open.", "start_ms": 351500, "end_ms": 423500 }
+  ],
+  "action_items": [
+    { "text": "Send the seat-tiered pricing proposal separating full seats from viewer-tier seats", "assignee": "Daniel Okafor", "due_in_days": 1, "is_done": true },
+    { "text": "Send the connector rate-limit specs (60 requests/sec, queuing behavior) in writing", "assignee": "Daniel Okafor", "due_in_days": 1, "is_done": true },
+    { "text": "Send the SOC 2 Type II report and signed BAA to Taylor under NDA", "assignee": "Alex Rivera", "due_in_days": 1, "is_done": true },
+    { "text": "Schedule the migrations engineer session on whether Flowline history migrates without breaking the audit trail", "assignee": "Alex Rivera", "due_in_days": 5, "is_done": false },
+    { "text": "Confirm the security review committee slot once SOC 2 materials are received", "assignee": "Taylor Simmons", "due_in_days": 7, "is_done": false }
+  ],
+  "segments": [
+    { "speaker": "Daniel Okafor", "start_ms": 0, "end_ms": 10000, "text": "Thanks for making time this week — I know Thursday afternoons are hard to protect on a hospital operations calendar, so I appreciate you carving out forty-five minutes." },
+    { "speaker": "Jordan Blake", "start_ms": 10000, "end_ms": 20500, "text": "No problem, though I want to say up front that we're evaluating three vendors in parallel, so I'll be pretty blunt about tradeoffs and pricing as we go." },
+    { "speaker": "Daniel Okafor", "start_ms": 20500, "end_ms": 31000, "text": "That's exactly what I want, blunt is efficient for both of us. Before I show anything, can you walk me through what's actually not working for you today?" },
+    { "speaker": "Jordan Blake", "start_ms": 31000, "end_ms": 41500, "text": "Sure. We've been on Flowline for about three years now. It technically still does project tracking, but honestly nobody on my team trusts the data in it anymore." },
+    { "speaker": "Taylor Simmons", "start_ms": 41500, "end_ms": 55500, "text": "I'll add the technical side of that. Flowline's API rate limits break our nightly sync with the EHR reporting pipeline roughly twice a month, and when that happens someone ends up reconciling everything by hand in a spreadsheet." },
+    { "speaker": "Alex Rivera", "start_ms": 55500, "end_ms": 67000, "text": "That's a good gut check for us, because reliability under load is exactly one of the things I want to show you today rather than just talk about in the abstract." },
+    { "speaker": "Daniel Okafor", "start_ms": 67000, "end_ms": 77500, "text": "Before Alex drives the demo, Jordan, I want to understand the actual trigger for looking now. Three years is a long time to tolerate a tool nobody trusts." },
+    { "speaker": "Jordan Blake", "start_ms": 77500, "end_ms": 88000, "text": "Budget renewal lands in October, and frankly Flowline's parent company got acquired back in June. Nobody over there can tell us what their roadmap even looks like anymore." },
+    { "speaker": "Taylor Simmons", "start_ms": 88000, "end_ms": 98500, "text": "And I've personally been asked to lead a proper vendor security review this time around, which we honestly skipped entirely when we first bought Flowline three years ago." },
+    { "speaker": "Daniel Okafor", "start_ms": 98500, "end_ms": 110000, "text": "Good, let's put that on the agenda directly instead of bolting it on at the end like people usually do. Alex, can you take us through the workspace and reporting flow?" },
+    { "speaker": "Alex Rivera", "start_ms": 110000, "end_ms": 119500, "text": "Happy to. I'm sharing my screen now — this is a workspace configured to look like a mid-size healthcare ops team, not our polished marketing demo environment." },
+    { "speaker": "Alex Rivera", "start_ms": 119500, "end_ms": 130000, "text": "The piece Jordan mentioned — sync reliability — comes from us queuing writes instead of dropping them whenever a downstream system is slow or temporarily unreachable. Nothing just silently disappears." },
+    { "speaker": "Jordan Blake", "start_ms": 130000, "end_ms": 140000, "text": "Okay, that directly answers the Friday-afternoon problem we've been living with. What's the actual rate limit on your side if we're pushing data from an EHR integration?" },
+    { "speaker": "Alex Rivera", "start_ms": 140000, "end_ms": 151000, "text": "For the enterprise tier it's sixty requests a second per workspace, and above that it queues rather than rejects outright. I can get you the exact numbers in writing today." },
+    { "speaker": "Taylor Simmons", "start_ms": 151000, "end_ms": 160500, "text": "Please put that in writing, because 'sixty requests a second' needs to survive contact with our actual integration engineer, not just a sales call slide." },
+    { "speaker": "Daniel Okafor", "start_ms": 160500, "end_ms": 169000, "text": "Noted — I'll have the connector specs and the rate-limit documentation in the follow-up email tonight, not just a verbal number from this call." },
+    { "speaker": "Jordan Blake", "start_ms": 169000, "end_ms": 178500, "text": "Let's talk price then, because this is exactly where Flowline was cheap and I need to understand why yours isn't before we go any further." },
+    { "speaker": "Daniel Okafor", "start_ms": 178500, "end_ms": 187500, "text": "Fair question. Our enterprise tier is ninety-four dollars per seat per month, billed annually, and that includes the integration connectors Alex just showed you." },
+    { "speaker": "Jordan Blake", "start_ms": 187500, "end_ms": 197000, "text": "Ninety-four dollars times four hundred and fifty seats is over five hundred thousand dollars a year. Flowline was under two hundred thousand fully loaded, all in." },
+    { "speaker": "Daniel Okafor", "start_ms": 197000, "end_ms": 209000, "text": "That's a fair comparison to make, and I won't pretend it's the same number. Where the math usually changes is that not all four fifty of your people need a full seat." },
+    { "speaker": "Alex Rivera", "start_ms": 209000, "end_ms": 220500, "text": "Right — a lot of our healthcare customers put clinical staff on a read-only viewer tier, which is priced separately, and only license the ops and reporting users at the full rate." },
+    { "speaker": "Jordan Blake", "start_ms": 220500, "end_ms": 227000, "text": "Okay, how many of our four fifty would actually need a full seat in your experience, realistically?" },
+    { "speaker": "Alex Rivera", "start_ms": 227000, "end_ms": 237000, "text": "For a team your shape, usually somewhere between eighty and a hundred and twenty full seats, with the rest riding on viewer licenses at eighteen dollars each." },
+    { "speaker": "Daniel Okafor", "start_ms": 237000, "end_ms": 247500, "text": "So if we run that math — a hundred full seats plus three fifty viewer seats — it lands closer to two hundred and forty thousand a year, not five hundred." },
+    { "speaker": "Jordan Blake", "start_ms": 247500, "end_ms": 262000, "text": "That's a very different conversation than the one I walked in with. I'll want that broken out in writing too, because I do not want to present five hundred thousand internally and get corrected later in front of finance." },
+    { "speaker": "Daniel Okafor", "start_ms": 262000, "end_ms": 270500, "text": "Understood — I'll send a seat-tiered proposal, not a scary headline number, and I'll break out clinical viewer seats from operational full seats explicitly." },
+    { "speaker": "Taylor Simmons", "start_ms": 270500, "end_ms": 280000, "text": "Before we get too excited about pricing, I need to raise security. We're a covered entity, so do you currently have a valid SOC 2 Type Two report?" },
+    { "speaker": "Alex Rivera", "start_ms": 280000, "end_ms": 290500, "text": "We do, renewed this past March, and I can get it over to you under NDA today. We're also HIPAA-ready, and we have a signed BAA available on request." },
+    { "speaker": "Taylor Simmons", "start_ms": 290500, "end_ms": 301000, "text": "Good, that's table stakes for us, but I still need it in hand before my review board will even schedule a session. Do you support SSO through Okta specifically?" },
+    { "speaker": "Alex Rivera", "start_ms": 301000, "end_ms": 311500, "text": "Yes, SAML-based SSO through Okta is included at the enterprise tier, along with SCIM provisioning, so terminated employees get deprovisioned automatically instead of someone remembering to do it manually." },
+    { "speaker": "Taylor Simmons", "start_ms": 311500, "end_ms": 324500, "text": "That automatic deprovisioning matters a lot to auditors, honestly. One open question though — can we migrate three years of Flowline history without breaking the audit trail? Retention rules apply to a lot of that data." },
+    { "speaker": "Daniel Okafor", "start_ms": 324500, "end_ms": 336500, "text": "That's honestly the one question I can't answer with full confidence today. Migration tooling exists, but preserving a chain-of-custody audit trail across two different systems isn't something I want to promise casually." },
+    { "speaker": "Jordan Blake", "start_ms": 336500, "end_ms": 351500, "text": "I actually appreciate you not just saying yes to make me happy. But that's a real blocker for us — if we can't prove the trail survived the move, compliance will not sign off, regardless of the price we land on." },
+    { "speaker": "Alex Rivera", "start_ms": 351500, "end_ms": 362000, "text": "Let me pull in our migrations engineer for a dedicated technical session specifically on that, rather than have me guess at the answer in front of you right now." },
+    { "speaker": "Daniel Okafor", "start_ms": 362000, "end_ms": 368500, "text": "Agreed. So separate from that technical answer, where does this leave procurement timing on your side realistically?" },
+    { "speaker": "Jordan Blake", "start_ms": 368500, "end_ms": 380000, "text": "Our procurement cycle runs six to eight weeks once a vendor clears security review, and our committee only meets every other Thursday, so the calendar matters as much as the content." },
+    { "speaker": "Taylor Simmons", "start_ms": 380000, "end_ms": 392500, "text": "I can get the security review itself moving faster if the SOC 2 report and the BAA land this week, but I am not going to shortcut the review to hit a date." },
+    { "speaker": "Daniel Okafor", "start_ms": 392500, "end_ms": 403500, "text": "That's fair, and I would rather this take the right amount of time than get fast-tracked and revisited later by your legal team. Let me summarize where we landed today." },
+    { "speaker": "Daniel Okafor", "start_ms": 403500, "end_ms": 413500, "text": "Seat-tiered pricing proposal from me by tomorrow, the connector rate-limit specs in writing, and the SOC 2 report and BAA over to Taylor today under NDA." },
+    { "speaker": "Jordan Blake", "start_ms": 413500, "end_ms": 423500, "text": "Let's do that. Honestly the migration answer and the security packet are what determines whether this even reaches committee at this point, more than the price does." }
+  ]
+}

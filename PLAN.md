@@ -10,18 +10,55 @@ output seen) — not when the code is merely written.
 | Phase | Name | Status |
 |---|---|---|
 | 0 | Environment & scaffold | 🟢 Done (pending `npm run dev` check) |
-| 1 | Database schema & models | 🟡 Code complete — verification not yet run |
-| 2 | Seed data | 🟡 Loader done, fixtures 2–6 outstanding |
-| 3 | Backend API — read paths | 🟡 Schemas done, routers outstanding |
-| 4 | Backend API — CRUD & ingestion | ⬜ |
+| 1 | Database schema & models | 🟢 Done — all 9 checks verified by execution |
+| 2 | Seed data | 🟢 5 of 6 fixtures done & validated; 1 outstanding |
+| 3 | Backend API — read paths | 🟢 Done & live-tested (global search still to add) |
+| 4 | Backend API — CRUD & ingestion | ⬜ **← resume here** |
 | 5 | Frontend scaffold & design system | ⬜ |
 | 6 | Meetings library view | ⬜ |
 | 7 | Meeting notebook — transcript & player sync | ⬜ |
 | 8 | Summary, chapters & action items | ⬜ |
 | 9 | Fireflies polish & placeholders | ⬜ |
-| 10 | Documentation (README) | ⬜ |
-| 11 | Containerisation & AWS deployment | ⬜ |
+| 10 | Documentation (README) | 🟡 README written; needs updating as features land |
+| 11 | Containerisation & AWS deployment | ⬜ (backend Dockerfile done) |
 | 12 | Bonus features (time permitting) | ⬜ |
+
+---
+
+## Current state — read this first when resuming
+
+**Working and verified by running it:**
+- SQLite schema: 10 tables, FKs enforced, WAL, cascade deletes confirmed.
+- Seed loader: idempotent, validates fixture timelines, 5 meetings / 174 segments load clean.
+- Read API: list (search by title *or participant name*, filter by participant/tag/date,
+  sort, paginate), detail, transcript, participants, tags, current user, health.
+  All exercised against a live container; counts cross-checked against the detail endpoint.
+- Backend runs in Docker on `python:3.12-slim`.
+
+**Verify the whole backend in one command:**
+```bash
+docker build -t fireflies-backend:dev ./backend
+docker run --rm -e DATABASE_URL=sqlite:////tmp/v.db \
+  -v "$PWD/backend/scripts:/srv/scripts:ro" fireflies-backend:dev python scripts/verify_schema.py
+docker run --rm -v "$PWD/backend/scripts:/srv/scripts:ro" \
+  -v "$PWD/backend/app/seed/data:/srv/app/seed/data:ro" \
+  fireflies-backend:dev python scripts/validate_fixtures.py
+```
+
+**Not started at all:** the entire frontend beyond the `create-next-app` scaffold — which is
+the largest remaining chunk of work, and includes the highest-risk feature (Phase 7).
+
+**Known constraint:** the account hit an API session limit (resets 05:30 Asia/Kolkata) which
+killed one agent mid-task. Plan agent work as fewer, larger tasks rather than many small ones.
+
+### Immediate next steps, in order
+1. Write the 6th fixture (`06-notebook-redesign-review.json`) — brief is in WORKLOG entry 16;
+   validate with `validate_fixtures.py`.
+2. Phase 4: meeting CRUD + `.txt`/`.vtt`/`.json` transcript ingestion + mock summary generator.
+3. Phase 5–6: frontend shell and library view (parallelisable with Phase 4 — the API
+   contract in `backend/app/schemas/` is frozen).
+4. Phase 7: the player/transcript sync. **Do this personally, not via an agent** — it is one
+   tightly-coupled feature and the most heavily graded.
 
 ---
 
@@ -63,9 +100,12 @@ deliberately rather than derived from the UI.
 - [x] `Summary` (overview + JSON keywords/bullet notes) and `Chapter` (seekable outline)
 - [x] `ActionItem` (assignee, done flag, due date, optional source segment)
 - [x] `Tag` + `meeting_tags` (M2M, powers bonus tag filtering)
-- [x] `backend/scripts/verify_schema.py` written — checks DDL, PRAGMAs, seed load,
+- [x] `backend/scripts/verify_schema.py` — checks DDL, PRAGMAs, seed load,
       loader idempotency, and cascade deletes in one pass
-- [ ] **Run it** (blocked only on one image rebuild for `email-validator`)
+- [x] **Run and green:** 10 tables created, `foreign_keys=ON`, `journal_mode=wal`,
+      seed loads (41 segments / 4 speakers / 4 chapters / 4 action items), re-running the
+      loader is a no-op, deleting a meeting orphans nothing, participants survive.
+- [x] M2M join rows confirmed persisting (4 `meeting_participants` rows, organizer + tags correct)
 
 **Design decisions to defend in the interview:**
 1. **All time is `*_ms` integers.** Transcript segments, chapters and meeting
@@ -93,8 +133,14 @@ Task requires the app to be "immediately usable" on first run.
 - [x] `validate_fixture()` enforces the timeline invariants at load time, so a bad
       fixture fails startup loudly instead of producing a broken seek bar
 - [x] Dates stored as `days_ago` offsets so the library always looks current
-- [ ] Fixtures 2–6 — **fanned out to 5 parallel Sonnet agents** (sales call, 1:1,
-      standup, customer interview, design review)
+- [x] Fixtures 2–5 — written by parallel agents and **independently validated**:
+      sales discovery (40 seg), standup (28 seg), 1:1 (31 seg), customer interview (34 seg)
+- [x] `scripts/validate_fixtures.py` — re-runs loader invariants on every fixture plus
+      cross-fixture checks (duplicate emails with conflicting identities, one name mapped to
+      two emails, duplicate titles, excessive dead air). Currently green on all 5.
+- [ ] Fixture 6 — `06-notebook-redesign-review.json` (agent hit the API session limit)
+
+**Totals so far:** 5 meetings · 174 segments · 10 participants · 22 chapters · 22 action items.
 
 **Exit criteria:** fresh DB → 6 meetings with full transcripts, summaries,
 chapters and action items; re-running the loader does not duplicate rows.
@@ -104,14 +150,19 @@ chapters and action items; re-running the loader does not duplicate rows.
 - [x] Pydantic v2 schemas (separate from ORM models) — `schemas/{common,participant,
       transcript,summary,action_item,meeting}.py`. **This is Gate B: the frozen API
       contract that lets frontend and backend proceed in parallel.**
-- [ ] `GET /api/meetings` — search, filter by participant/tag/date, sort by recency, paginate
-- [ ] `GET /api/meetings/{id}` — full notebook payload
-- [ ] `GET /api/meetings/{id}/transcript`
-- [ ] `GET /api/search` — global cross-meeting transcript search (bonus, cheap here)
-- [ ] `GET /api/participants`, `GET /api/me`
-- [ ] Service layer between routers and models
+- [x] `GET /api/meetings` — search, filter by participant/tag/date, sort, paginate ✅ live-tested
+- [x] `GET /api/meetings/{id}` — full notebook payload (404s correctly)
+- [x] `GET /api/meetings/{id}/transcript` ✅ 41 segments, 4 speakers, duration correct
+- [x] `GET /api/participants`, `GET /api/me`, `GET /api/tags` ✅
+- [x] Service layer between routers and models (`services/meeting_service.py`)
+- [ ] `GET /api/search` — global cross-meeting transcript search (bonus)
+- [x] Computed `action_item_count` / `open_action_item_count` / `has_summary` verified
+      across 4 meetings — list-endpoint counts cross-checked against the detail endpoint
+      and match exactly (4/3, 5/3, 4/3). `sort=oldest` and `?tag=Engineering` also verified.
 
-**Exit criteria:** every endpoint returns correct data via `/docs`.
+**Exit criteria:** every endpoint returns correct data. ✅ verified against a live
+container on port 8199; search by participant name works, empty search returns 0,
+unknown id returns 404, no errors or warnings in the server log.
 
 ## Phase 4 — Backend API, CRUD & ingestion ⬜
 

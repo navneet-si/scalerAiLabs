@@ -1,0 +1,88 @@
+{
+  "title": "Weekly Engineering Standup",
+  "description": "Fast-paced daily sync covering a flaky CI test, a dependency upgrade that broke staging, on-call handoff, and a quietly surfaced blocker.",
+  "days_ago": 3,
+  "time": "09:15",
+  "duration_ms": 204000,
+  "tags": ["Engineering", "Standup"],
+  "organizer": "Marcus Rodriguez",
+  "participants": [
+    { "name": "Marcus Rodriguez", "email": "marcus.r@northwind.io", "color": "#f59e0b", "role": "host" },
+    { "name": "Alex Rivera", "email": "alex.rivera@northwind.io", "color": "#ec4899", "role": "attendee" },
+    { "name": "Tom Whitfield", "email": "tom.whitfield@northwind.io", "color": "#14b8a6", "role": "attendee" },
+    { "name": "Priya Nair", "email": "priya.nair@northwind.io", "color": "#10b981", "role": "attendee" }
+  ],
+  "summary": {
+    "overview": "The team moved quickly through a standup that surfaced two problems nobody had escalated yet: the test_payment_webhook_retry suite has been flaky for weeks and everyone had just been rerunning it instead of filing a ticket, so Alex volunteered to own the investigation while continuing his retry-path work. Tom reported that a Friday-afternoon Postgres client upgrade, merged as a minor version bump without a second reviewer, broke timestamp serialization and took staging's analytics service down; his fix pins the old serializer behavior and he agreed to add a changelog check requiring review on future minor bumps. Marcus handed the on-call pager to Priya for noon, flagging a known-noisy 3 a.m. disk alert, and near the end Alex quietly admitted he's been blocked since Monday on prod-read access to the analytics warehouse, which Marcus committed to escalating with IT immediately.",
+    "keywords": ["flaky test", "Postgres upgrade", "staging outage", "on-call handoff", "webhook retries", "prod access"],
+    "bullet_notes": [
+      {
+        "title": "Flaky CI test",
+        "points": [
+          "test_payment_webhook_retry has failed repeatedly for weeks and people have just been rerunning it rather than filing a ticket.",
+          "Alex volunteers to investigate since he's already working in the webhook retry path for something else.",
+          "Marcus insists the ticket gets filed first, even if the fix lands within the hour, to have a paper trail on how long it sat."
+        ]
+      },
+      {
+        "title": "Dependency upgrade breaks staging",
+        "points": [
+          "A Friday-afternoon Postgres client bump, merged as a minor version without a second reviewer, changed timestamp serialization.",
+          "Analytics service is fully down; the main app degrades but doesn't fully break.",
+          "Tom's fix pins the old serializer behavior and is in review; he'll also add a changelog check requiring a second reviewer on minor dependency bumps."
+        ]
+      },
+      {
+        "title": "On-call handoff and a quiet blocker",
+        "points": [
+          "Marcus hands the pager to Priya at noon and flags the recurring 3 a.m. disk-usage alert as a known false alarm tied to log rotation.",
+          "Alex has been blocked since Monday on prod-read access to the analytics warehouse and hadn't raised it until asked directly.",
+          "Marcus commits to pinging IT right after standup to get the access approved today."
+        ]
+      }
+    ]
+  },
+  "chapters": [
+    { "title": "Round robin and Priya's updates", "gist": "Marcus opens standup and Priya reports shipping the billing retry fix before flagging that the webhook retry test failed again.", "start_ms": 0, "end_ms": 40000 },
+    { "title": "Nobody owns the flaky test", "gist": "Marcus admits no one has filed a ticket for the recurring failure and Alex volunteers to investigate it alongside his retry-path work.", "start_ms": 40000, "end_ms": 71000 },
+    { "title": "Dependency upgrade breaks staging", "gist": "Tom explains how Friday's unreviewed Postgres client bump broke timestamp serialization and took down the analytics service, then proposes a fix and a bot policy change.", "start_ms": 71000, "end_ms": 125800 },
+    { "title": "On-call handoff and a quiet blocker", "gist": "Marcus passes the pager to Priya, then Alex admits he's been stuck since Monday waiting on warehouse access that's now blocking the flaky-test work.", "start_ms": 125800, "end_ms": 202300 }
+  ],
+  "action_items": [
+    { "text": "Ship the retry-logic fix for the billing webhook queue", "assignee": "Priya Nair", "due_in_days": 0, "is_done": true },
+    { "text": "File a ticket for the test_payment_webhook_retry flakiness and investigate the root cause", "assignee": "Alex Rivera", "due_in_days": 2, "is_done": false },
+    { "text": "Land the timestamp-serializer patch pinning the Postgres client and confirm staging is green", "assignee": "Tom Whitfield", "due_in_days": 1, "is_done": false },
+    { "text": "Add a changelog / second-reviewer check to the dependency bot for minor version bumps", "assignee": "Tom Whitfield", "due_in_days": 5, "is_done": false },
+    { "text": "Get Alex's prod-read access to the analytics warehouse approved with IT", "assignee": "Marcus Rodriguez", "due_in_days": 1, "is_done": true }
+  ],
+  "segments": [
+    { "speaker": "Marcus Rodriguez", "start_ms": 0, "end_ms": 5000, "text": "Morning. Let's move fast, we're already running behind. Quick round robin — Priya, go ahead." },
+    { "speaker": "Priya Nair", "start_ms": 5000, "end_ms": 13000, "text": "Yesterday I shipped the retry-logic fix for the billing webhook queue. Today I'm picking up signature validation on the same service." },
+    { "speaker": "Priya Nair", "start_ms": 13000, "end_ms": 19000, "text": "Also, quick flag — test_payment_webhook_retry failed on my branch again. That's the fourth time this week." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 19000, "end_ms": 24000, "text": "Saw that fail on my PR yesterday too. Reran it, went green, moved on." },
+    { "speaker": "Tom Whitfield", "start_ms": 24000, "end_ms": 33000, "text": "Same here. I've reran that test probably ten times in the last two weeks. At some point that's not a flaky test, that's a habit." },
+    { "speaker": "Priya Nair", "start_ms": 33000, "end_ms": 39000, "text": "Has anyone actually opened a ticket for it, or are we all just quietly rerunning it forever?" },
+    { "speaker": "Marcus Rodriguez", "start_ms": 40000, "end_ms": 47000, "text": "...No. Nobody has. That's on me, honestly, I keep meaning to and then standup ends and I forget." },
+    { "speaker": "Alex Rivera", "start_ms": 47000, "end_ms": 57000, "text": "I can take it. I was already digging into the webhook retry path for something else, might as well trace why it's flaky while I'm in there." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 57000, "end_ms": 67000, "text": "Take it. File the ticket first though, even if you fix it in the next hour — I want a paper trail on how long this sat." },
+    { "speaker": "Alex Rivera", "start_ms": 67000, "end_ms": 68000, "text": "Will do." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 68000, "end_ms": 71000, "text": "Tom, you're up. What's going on with staging?" },
+    { "speaker": "Tom Whitfield", "start_ms": 71000, "end_ms": 82000, "text": "So, staging's been broken since last night. I upgraded the Postgres client library to pick up the connection-pooling fix, and it turns out the new version changed how it serializes timestamps." },
+    { "speaker": "Tom Whitfield", "start_ms": 82000, "end_ms": 90000, "text": "Anything with a timezone-aware column started throwing on write. Analytics service is down hard, the main app degrades but doesn't fully break." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 90000, "end_ms": 94000, "text": "Wait, when did that merge? I don't remember seeing that PR." },
+    { "speaker": "Tom Whitfield", "start_ms": 94000, "end_ms": 103000, "text": "Friday afternoon. It was tagged as a minor version bump so it didn't need a second reviewer. In hindsight that was the wrong call." },
+    { "speaker": "Priya Nair", "start_ms": 103000, "end_ms": 107000, "text": "Friday deploy, nobody around over the weekend to notice — classic." },
+    { "speaker": "Tom Whitfield", "start_ms": 107000, "end_ms": 116000, "text": "Yeah. I've got a patch pinning the timestamp serializer back to the old behavior, it's in review now. Should be in staging within the hour." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 116800, "end_ms": 125800, "text": "Okay. Can you also add a changelog check to the dependency bot so minor bumps on that package need a second reviewer going forward?" },
+    { "speaker": "Tom Whitfield", "start_ms": 125800, "end_ms": 128800, "text": "Yep, I'll do that after the patch lands." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 128800, "end_ms": 134800, "text": "Good. Last thing — on-call. I'm handing it off to Priya at noon today, so heads up." },
+    { "speaker": "Priya Nair", "start_ms": 134800, "end_ms": 141800, "text": "Got it. Anything still smoldering from your week I should know about before you hand me the pager?" },
+    { "speaker": "Marcus Rodriguez", "start_ms": 141800, "end_ms": 154800, "text": "Just the payment retry flakiness, which Alex has now, and one alert that fires around 3 a.m. for disk usage on the log volume that's actually fine, it just crosses the threshold during log rotation." },
+    { "speaker": "Priya Nair", "start_ms": 154800, "end_ms": 159800, "text": "Noted, I'll snooze that alert's threshold instead of getting paged for nothing at 3 a.m." },
+    { "speaker": "Alex Rivera", "start_ms": 161300, "end_ms": 172300, "text": "Before we close — I'm actually stuck on something. I still don't have prod-read access to the analytics warehouse, I put in the request Monday and it's not showing as approved." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 172300, "end_ms": 176300, "text": "That's been sitting since Monday? Why didn't you say something earlier." },
+    { "speaker": "Alex Rivera", "start_ms": 176300, "end_ms": 186300, "text": "Didn't want to make noise over an access request. But it's blocking the flaky-test investigation now since I need warehouse data to trace the webhook retries." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 186300, "end_ms": 193300, "text": "Noise is fine, that's what standup is for. I'll ping IT directly after this and get it approved today." },
+    { "speaker": "Marcus Rodriguez", "start_ms": 193300, "end_ms": 202300, "text": "Alright, that's the standup. Tom's patch, my on-call handoff to Priya, Alex's access ticket, and someone please actually file that flaky-test bug. Talk tomorrow." }
+  ]
+}
