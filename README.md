@@ -8,9 +8,10 @@ Real speech-to-text is deliberately out of scope (per the assignment). Transcrip
 seeded from fixtures or ingested from uploaded files; summaries are seeded or generated
 deterministically from transcript text.
 
-> **Build status:** the backend is implemented and verified; the frontend is scaffolded but
-> not yet built. See [Implementation status](#implementation-status) for the honest
-> breakdown, and [PLAN.md](./PLAN.md) for the phased plan and what comes next.
+> **Build status:** the backend is complete and verified by execution (~40 automated
+> assertions); the frontend is scaffolded but not yet built. See
+> [Implementation status](#implementation-status) for the honest breakdown, and
+> [PLAN.md](./PLAN.md) for the phased plan and what comes next.
 
 ---
 
@@ -79,6 +80,13 @@ docker run --rm -e DATABASE_URL=sqlite:////tmp/v.db \
 docker run --rm -v "$PWD/backend/scripts:/srv/scripts:ro" \
   -v "$PWD/backend/app/seed/data:/srv/app/seed/data:ro" \
   fireflies-backend:dev python scripts/validate_fixtures.py
+
+# Every write endpoint against a live server: upload, create, patch, delete,
+# action items, cascade behaviour and error codes (29 assertions)
+docker run -d --name ff-verify -p 8199:8000 \
+  -e DATABASE_URL=sqlite:////tmp/verify.db fireflies-backend:dev
+backend/scripts/verify_api.sh http://localhost:8199
+docker rm -f ff-verify
 ```
 
 ---
@@ -172,12 +180,14 @@ Base path `/api`. Full interactive reference at `/docs` when running.
 | GET | `/api/participants` | All participants (powers the filter) | ✅ |
 | GET | `/api/tags` | All tags | ✅ |
 | GET | `/api/me` | The mocked logged-in user | ✅ |
-| POST | `/api/meetings` | Create by form or pasted transcript | ⬜ |
-| PATCH | `/api/meetings/{id}` | Edit metadata | ⬜ |
-| DELETE | `/api/meetings/{id}` | Delete (cascades) | ⬜ |
-| POST | `/api/meetings/upload` | Ingest `.txt` / `.vtt` / `.json` | ⬜ |
-| POST/PATCH/DELETE | `/api/.../action-items` | Action item CRUD | ⬜ |
-| GET | `/api/search` | Global cross-meeting transcript search | ⬜ |
+| POST | `/api/meetings` | Create by form or pasted transcript | ✅ |
+| POST | `/api/meetings/upload` | Ingest `.vtt` / `.json` / `.txt` (5MB, UTF-8) | ✅ |
+| PATCH | `/api/meetings/{id}` | Edit metadata | ✅ |
+| DELETE | `/api/meetings/{id}` | Delete (cascades) | ✅ |
+| POST | `/api/meetings/{id}/action-items` | Add an action item | ✅ |
+| PATCH | `/api/action-items/{id}` | Edit / assign / toggle complete | ✅ |
+| DELETE | `/api/action-items/{id}` | Remove an action item | ✅ |
+| GET | `/api/search` | Global cross-meeting transcript search | ⬜ bonus, not built |
 
 `search` matches on meeting title, description **and participant name** — "find the call with
 Priya" is as common a query as searching by title.
@@ -185,6 +195,43 @@ Priya" is as common a query as searching by title.
 The list endpoint omits transcript segments by design: a 10-row library would otherwise ship
 thousands of lines that no row renders. Action-item counts on the list are computed with one
 aggregate query per page rather than per-row lookups, avoiding an N+1.
+
+---
+
+## Transcript ingestion and summaries
+
+`.vtt`, `.json` and `.txt` all normalise to one `ParsedTranscript` in
+`services/transcript_parser.py`, so persistence, the summary generator and the player are
+written once against one shape rather than three times against three. The parser also repairs
+what real files actually contain: VTT cues routinely overlap by a few milliseconds at speaker
+changes, and pasted text has no timings at all — those lines are timed from their word count
+at ~2.75 words/second, which is what makes a pasted transcript playable instead of a wall of
+text.
+
+**Uploaded speakers stay unresolved.** A `.vtt` carrying `<v Speaker 1>` produces a `Speaker`
+row with `participant_id = NULL`, not a fabricated person. Inventing a participant named
+"Speaker 1" would pollute `/api/participants` and corrupt the library's participant filter.
+A label that *does* match a known participant is linked automatically. This is the
+`speakers`/`participants` split doing real work rather than being decorative.
+
+Because of that, fixture validation is split in two: `validate_timeline()` (ordering,
+non-overlap, duration ≥ last segment end) applies to any transcript; the identity checks
+(speaker must be a known participant, organizer must match) apply only to seed fixtures,
+where a stray name is an authoring typo worth failing startup over.
+
+**Summaries are a deterministic mock**, which the assignment permits. `summarizer.generate()`
+is the single entry point and the single swap point — moving to a real LLM means
+reimplementing that one function to return the same `GeneratedSummary`, with no caller
+changes. Generated rows are stamped `generated_by = "mock"` so the distinction is visible in
+the data, not just in the code.
+
+The mock is *extractive*, not templated: it scores real sentences by keyword density and
+quotes them. A templated summary would read identically for every meeting and demo as
+obvious filler; scoring costs the same and means every keyword, bullet, chapter and action
+item traces back to a line an evaluator can find by searching the transcript. Action items
+come from commitment cues ("I'll take…", "can you send…", "by Friday") and land as
+*editable* rows — cue matching is a heuristic, not comprehension, and the UI should treat it
+that way.
 
 ---
 
@@ -214,16 +261,17 @@ load order.
 ## Implementation status
 
 **Done and verified by execution**
-- Database schema, cascades, PRAGMAs (9/9 checks pass)
-- Idempotent seed loader with timeline validation
-- 5 of 6 seed fixtures, all validated
-- Read API: list/detail/transcript/participants/tags/me/health, live-tested
+- Database schema, cascades, PRAGMAs — 9/9 checks (`verify_schema.py`)
+- Idempotent seed loader with timeline validation; 5 seeded meetings, all validated
+- Read API: list / detail / transcript / participants / tags / me / health
+- Write API: create, upload, patch, delete, action-item CRUD — 29/29 checks (`verify_api.sh`)
+- Transcript ingestion for `.vtt`, `.json` and `.txt`, plus pasted text
+- Mock summary generation: overview, keywords, bullet sections, chapters, action items
 - Backend Dockerfile
 
 **Not yet implemented**
-- Meeting and action-item CRUD; transcript upload and parsing
-- The entire frontend beyond the scaffold — library view, notebook, player sync,
-  summary panel, modals, toasts, placeholders
+- The entire frontend beyond the scaffold — library view, notebook, player sync, summary
+  panel, modals, toasts, placeholders. This is the bulk of the remaining work.
 - Global search, export, dark mode and the other bonus items
 - Deployment (target: single EC2 + nginx + CloudFront, see PLAN.md Phase 11)
 

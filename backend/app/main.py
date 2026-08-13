@@ -1,13 +1,15 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app import models  # noqa: F401  -- imported so every mapper is registered
 from app.core.config import get_settings
 from app.core.database import Base, SessionLocal, engine
-from app.routers import meetings, participants
-from app.seed.loader import seed_database
+from app.routers import action_items, meetings, participants
+from app.seed.loader import FixtureError, seed_database
+from app.services.transcript_parser import TranscriptParseError
 
 settings = get_settings()
 
@@ -37,8 +39,20 @@ app.add_middleware(
 )
 
 
+@app.exception_handler(TranscriptParseError)
+@app.exception_handler(FixtureError)
+def handle_invalid_transcript(_request: Request, exc: Exception) -> JSONResponse:
+    """Bad transcript content is a 422, not a 500.
+
+    Both errors mean "the input is well-formed enough to reach us but cannot be
+    stored", so they get one handler and the client gets one shape to render.
+    """
+    return JSONResponse(status_code=422, content={"detail": str(exc)})
+
+
 app.include_router(meetings.router)
 app.include_router(participants.router)
+app.include_router(action_items.router)
 
 
 @app.get("/api/health", tags=["system"])

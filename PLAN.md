@@ -11,10 +11,10 @@ output seen) — not when the code is merely written.
 |---|---|---|
 | 0 | Environment & scaffold | 🟢 Done (pending `npm run dev` check) |
 | 1 | Database schema & models | 🟢 Done — all 9 checks verified by execution |
-| 2 | Seed data | 🟢 5 of 6 fixtures done & validated; 1 outstanding |
-| 3 | Backend API — read paths | 🟢 Done & live-tested (global search still to add) |
-| 4 | Backend API — CRUD & ingestion | ⬜ **← resume here** |
-| 5 | Frontend scaffold & design system | ⬜ |
+| 2 | Seed data | 🟢 5 fixtures done & validated (6th dropped — see Phase 2) |
+| 3 | Backend API — read paths | ✅ Done & live-tested |
+| 4 | Backend API — CRUD & ingestion | ✅ Done — 29/29 API checks pass |
+| 5 | Frontend scaffold & design system | ⬜ **← resume here** |
 | 6 | Meetings library view | ⬜ |
 | 7 | Meeting notebook — transcript & player sync | ⬜ |
 | 8 | Summary, chapters & action items | ⬜ |
@@ -27,38 +27,62 @@ output seen) — not when the code is merely written.
 
 ## Current state — read this first when resuming
 
-**Working and verified by running it:**
+**The backend is complete and verified by execution. The frontend is at zero.**
+
+Working and proven by running it:
 - SQLite schema: 10 tables, FKs enforced, WAL, cascade deletes confirmed.
 - Seed loader: idempotent, validates fixture timelines, 5 meetings / 174 segments load clean.
 - Read API: list (search by title *or participant name*, filter by participant/tag/date,
   sort, paginate), detail, transcript, participants, tags, current user, health.
-  All exercised against a live container; counts cross-checked against the detail endpoint.
+- Write API: create by form or pasted transcript, `.vtt`/`.json`/`.txt` upload, metadata
+  patch, delete-with-cascade, full action-item CRUD, typed 422s on bad input.
+- Mock summary generator producing overview, keywords, bullet sections, chapters and action
+  items from transcript text alone.
 - Backend runs in Docker on `python:3.12-slim`.
 
-**Verify the whole backend in one command:**
+**Verify the whole backend — three commands, ~40 assertions:**
 ```bash
 docker build -t fireflies-backend:dev ./backend
+
+# Schema, PRAGMAs, seeding, idempotency, cascades (9 checks)
 docker run --rm -e DATABASE_URL=sqlite:////tmp/v.db \
   -v "$PWD/backend/scripts:/srv/scripts:ro" fireflies-backend:dev python scripts/verify_schema.py
+
+# Every fixture's timeline + cross-fixture identity consistency
 docker run --rm -v "$PWD/backend/scripts:/srv/scripts:ro" \
   -v "$PWD/backend/app/seed/data:/srv/app/seed/data:ro" \
   fireflies-backend:dev python scripts/validate_fixtures.py
+
+# Every write endpoint against a live server (29 checks)
+docker run -d --name ff-verify -p 8199:8000 \
+  -e DATABASE_URL=sqlite:////tmp/verify.db fireflies-backend:dev
+backend/scripts/verify_api.sh http://localhost:8199
+docker rm -f ff-verify
 ```
 
-**Not started at all:** the entire frontend beyond the `create-next-app` scaffold — which is
-the largest remaining chunk of work, and includes the highest-risk feature (Phase 7).
+**Not started at all:** the entire frontend beyond the `create-next-app` scaffold. This is now
+the *only* substantial work left, and it carries the two heaviest grading criteria — UI/UX
+fidelity and Functionality — plus the highest-risk feature (Phase 7).
 
 **Known constraint:** the account hit an API session limit (resets 05:30 Asia/Kolkata) which
 killed one agent mid-task. Plan agent work as fewer, larger tasks rather than many small ones.
 
 ### Immediate next steps, in order
-1. Write the 6th fixture (`06-notebook-redesign-review.json`) — brief is in WORKLOG entry 16;
-   validate with `validate_fixtures.py`.
-2. Phase 4: meeting CRUD + `.txt`/`.vtt`/`.json` transcript ingestion + mock summary generator.
-3. Phase 5–6: frontend shell and library view (parallelisable with Phase 4 — the API
-   contract in `backend/app/schemas/` is frozen).
-4. Phase 7: the player/transcript sync. **Do this personally, not via an agent** — it is one
-   tightly-coupled feature and the most heavily graded.
+1. **Phase 5 — frontend shell and design system.** Run the `npm run dev` smoke check first;
+   it has still never been run.
+2. **Phase 6 — meetings library view.** The API contract in `backend/app/schemas/` is frozen,
+   so this needs no further backend work.
+3. **Phase 7 — the player/transcript sync.** **Do this personally, not via an agent** — one
+   tightly-coupled feature and the most heavily graded single thing in the project.
+4. Phases 8–9, then deployment (Phase 11).
+
+### Decisions taken
+- **Summaries are mock-generated, not LLM-generated** (user's call, 2026-08-13). Extractive
+  rather than templated, so output differs per meeting and every line traces to the
+  transcript. `summarizer.generate()` is the sole swap point if an LLM is wanted later.
+- **The 6th fixture was dropped.** Five meetings already exercise every feature, and the agent
+  writing it hit the session limit. Not worth a rerun against a 0% frontend.
+- **`GET /api/search` was not built.** The spec lists global search under *Bonus*.
 
 ---
 
@@ -145,7 +169,7 @@ Task requires the app to be "immediately usable" on first run.
 **Exit criteria:** fresh DB → 6 meetings with full transcripts, summaries,
 chapters and action items; re-running the loader does not duplicate rows.
 
-## Phase 3 — Backend API, read paths ⬜
+## Phase 3 — Backend API, read paths ✅
 
 - [x] Pydantic v2 schemas (separate from ORM models) — `schemas/{common,participant,
       transcript,summary,action_item,meeting}.py`. **This is Gate B: the frozen API
@@ -155,7 +179,10 @@ chapters and action items; re-running the loader does not duplicate rows.
 - [x] `GET /api/meetings/{id}/transcript` ✅ 41 segments, 4 speakers, duration correct
 - [x] `GET /api/participants`, `GET /api/me`, `GET /api/tags` ✅
 - [x] Service layer between routers and models (`services/meeting_service.py`)
-- [ ] `GET /api/search` — global cross-meeting transcript search (bonus)
+- [~] `GET /api/search` — global cross-meeting transcript search. **Deliberately not
+      built**: the spec lists global search under *Bonus*, and the frontend is the binding
+      constraint. `GlobalSearchResult` is already defined in `schemas/transcript.py` if it
+      is picked up later.
 - [x] Computed `action_item_count` / `open_action_item_count` / `has_summary` verified
       across 4 meetings — list-endpoint counts cross-checked against the detail endpoint
       and match exactly (4/3, 5/3, 4/3). `sort=oldest` and `?tag=Engineering` also verified.
@@ -164,16 +191,39 @@ chapters and action items; re-running the loader does not duplicate rows.
 container on port 8199; search by participant name works, empty search returns 0,
 unknown id returns 404, no errors or warnings in the server log.
 
-## Phase 4 — Backend API, CRUD & ingestion ⬜
+## Phase 4 — Backend API, CRUD & ingestion ✅
 
-- [ ] `POST/PATCH/DELETE /api/meetings`
-- [ ] Action item create/update/toggle/delete
-- [ ] `POST /api/meetings/upload` accepting `.txt`, `.vtt`, `.json`
-- [ ] Parsers for each format → normalised segments + speakers
-- [ ] Mock summary generator (deterministic, from transcript text)
-- [ ] Consistent error handling + validation responses
+- [x] `POST/PATCH/DELETE /api/meetings` — create by form or pasted transcript; PATCH uses
+      `exclude_unset` so omitting a field differs from explicitly nulling it
+- [x] Action item create/update/toggle/delete (`services/action_item_service.py`)
+- [x] `POST /api/meetings/upload` accepting `.txt`, `.vtt`, `.json` (5MB cap, UTF-8 only)
+- [x] `services/transcript_parser.py` — all three formats collapse to one `ParsedTranscript`,
+      so persistence, the summariser and the player are written once against one shape
+- [x] `services/summarizer.py` — deterministic extractive generator; `generated_by="mock"`
+- [x] Typed errors: `TranscriptParseError`/`FixtureError` → 422 via handlers in `main.py`;
+      unknown ids → 404; nonexistent assignee → 422
+- [x] `services/people_service.py` — one participant/tag dedupe rule shared by the seed
+      loader and the write API, so "is this the same person?" cannot answer two ways
+- [x] **Validator split** (`validate_timeline` vs `validate_fixture`) — see below
+- [x] `scripts/verify_api.sh` — **29 assertions against a live container, all passing**
 
-**Exit criteria:** a `.vtt` upload produces a fully populated, browsable meeting.
+**Exit criteria:** ✅ a `.vtt` upload produces a fully populated, browsable meeting with
+summary, chapters and action items — verified.
+
+**The validator split, and why it matters.** `validate_fixture` originally required every
+segment speaker to be a listed participant. That directly contradicts design decision #2
+(transcripts can carry unresolved speaker labels). A `.vtt` containing `<v Speaker 1>` would
+either fail validation or force a fabricated Participant named "Speaker 1" — which would
+pollute `/api/participants` and break the library's participant filter. Timeline invariants
+now apply to any transcript; identity invariants stay seed-only, where a stray name is a typo
+worth failing on. An uploaded speaker becomes a `Speaker` row with `participant_id = NULL`.
+
+**Two defects found only by inspecting real output**, both fixed:
+1. `I'll` ranked as a top keyword — contractions survive tokenisation and a stopword list
+   cannot enumerate them. Fixed with a stem step that drops contraction/possessive tails.
+2. Action items quoted the wrong sentence ("Alright, thanks for joining." rather than the
+   commitment) because the code took the *first* sentence of a line instead of the relevant
+   one. Fixed with `_best_sentence` (keyword density) and `_cue_sentence` (contains the cue).
 
 ## Phase 5 — Frontend scaffold & design system ⬜
 

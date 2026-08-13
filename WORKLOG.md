@@ -277,6 +277,64 @@ Next.js scaffold) before starting Phase 1 verification.
 - User asked to stop and bring documentation current. No further build work performed after
   this point; `README.md` written covering setup, architecture, schema and API.
 
+### 22. Decision: mock summary generator, not an LLM
+- User: "lets go with mock now and if possible will change it later."
+- Consequence for the design: `summarizer.generate()` is the **single** entry point and the
+  single swap point. Nothing else in the codebase knows how a summary is produced; replacing
+  the mock means reimplementing that one function to return the same `GeneratedSummary`.
+- Chose an **extractive** mock over a templated one. A template ("This meeting covered
+  several topics") is identical for every meeting and reads as obvious filler in a demo.
+  Scoring real sentences costs the same and produces genuinely different output per meeting,
+  and every keyword/bullet/chapter traces back to a line an evaluator can search for.
+
+### 23. Phase 4 — CRUD, ingestion and the mock generator
+**Blocker found before writing any code.** `validate_fixture` required every segment speaker
+to be a listed participant. But design decision #2 — the one recorded for the interview — is
+that a transcript can carry *unresolved* speaker labels. Those two cannot both hold: a `.vtt`
+with `<v Speaker 1>` would either fail validation or force us to invent a Participant named
+"Speaker 1", which pollutes `/api/participants` and breaks the library's participant filter.
+
+Resolved by splitting the validator:
+- `validate_timeline()` — ordering, non-overlap, duration ≥ last end, chapters in range.
+  Applies to **any** transcript, seeded or uploaded.
+- `validate_fixture()` — timeline **plus** identity resolution (speaker must be a known
+  participant, organizer must match). Seed-only, because a fixture is authored and a stray
+  name there is a typo worth failing on.
+
+Also extracted `people_service.py` so the seed loader and the write API share **one**
+participant/tag dedupe rule. Two copies would drift and the symptom would be duplicate people
+silently breaking the participant filter.
+
+Built:
+- `transcript_parser.py` — `.vtt` / `.json` / `.txt` all collapse to one `ParsedTranscript`,
+  so persistence, the summariser and the player are written once. Normalises overlapping cues
+  (real VTT files overlap by milliseconds on speaker changes) and times un-timestamped pasted
+  text at 2.75 words/sec, which is what makes a paste playable rather than a wall of text.
+- `summarizer.py` — deterministic extractive generator; `generated_by="mock"` in the data.
+- `ingest_service.py` — create / update / delete / upload; `_as_utc()` normalises a naive
+  posted `meeting_date` so it date-filters consistently against tz-aware seeded rows.
+- `action_item_service.py` + `routers/action_items.py`; write endpoints on `routers/meetings.py`.
+- 422 handlers in `main.py` for `TranscriptParseError` and `FixtureError`.
+
+**Two bugs caught by running it, not by reading it:**
+1. `I'll` ranked as a top keyword. `_WORD` matched contractions and the stopword list can't
+   enumerate them. Fixed with `_stem()`, which drops the contraction/possessive tail.
+2. Every action item quoted the wrong sentence — "Alright, thanks for joining." instead of
+   the commitment. Root cause was taking the *first* sentence of a line rather than the
+   relevant one. Fixed with `_best_sentence()` (highest keyword density) for the overview,
+   bullets and chapter gists, and `_cue_sentence()` (the sentence containing the cue) for
+   action items. Both defects were invisible until real output was inspected.
+
+**Verified:** `backend/scripts/verify_api.sh` — 29 assertions against a live container, all
+passing, no tracebacks. Includes the two assertions that matter most and would otherwise fail
+silently: an unresolved VTT speaker does **not** become a participant, and deleting a meeting
+leaves zero orphaned rows while participants survive. `verify_schema.py` (9 checks) and
+`validate_fixtures.py` re-run green after the loader refactor.
+
+**Scope call:** `GET /api/search` (global search) is listed as *Bonus* in the spec and was
+deliberately left unbuilt. The frontend is still at 0% and carries the two heaviest grading
+criteria.
+
 ### Environment quirks worth remembering
 - Shell is **zsh**: unquoted `$var` does **not** word-split. An early
   permission-probe loop passed `"aws iam list-... "` as a single argument and
