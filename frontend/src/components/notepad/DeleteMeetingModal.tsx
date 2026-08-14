@@ -26,6 +26,7 @@ export function DeleteMeetingModal({
       addToast({ type: "success", title: "Meeting deleted successfully" });
       onClose();
       router.push("/notebook");
+      router.refresh(); // Ensure the library re-fetches and the row is gone
     } catch (e) {
       console.error(e);
       addToast({ type: "error", title: "Delete failed" });
@@ -35,14 +36,15 @@ export function DeleteMeetingModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Delete Meeting">
+    <Modal isOpen={isOpen} onClose={onClose} title="Delete Meeting" width={400}>
       <div className="flex flex-col gap-4">
         <p className="text-[14px] text-[var(--color-gray-700)]">
-          Are you sure you want to delete this meeting? This action cannot be undone.
+          Are you sure you want to delete this meeting? This action cannot be undone. 
+          You will lose the transcript, summary, and all action items.
         </p>
         
         <div className="flex justify-end gap-3 mt-4">
-          <Button variant="secondary" onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button variant="ghost" className="text-[var(--color-gray-500)] bg-transparent border-transparent hover:bg-[var(--color-gray-100)]" onClick={onClose} disabled={loading}>Cancel</Button>
           <Button variant="destructive" onClick={handleDelete} disabled={loading}>
             {loading ? "Deleting..." : "Delete"}
           </Button>

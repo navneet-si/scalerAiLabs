@@ -14,20 +14,21 @@ output seen) — not when the code is merely written.
 | 2 | Seed data | 🟢 5 fixtures done & validated (6th dropped — see Phase 2) |
 | 3 | Backend API — read paths | ✅ Done & live-tested |
 | 4 | Backend API — CRUD & ingestion | ✅ Done — 29/29 API checks pass |
-| 5 | Frontend scaffold & design system | ⬜ **← resume here** |
-| 6 | Meetings library view | ⬜ |
-| 7 | Meeting notebook — transcript & player sync | ⬜ |
-| 8 | Summary, chapters & action items | ⬜ |
-| 9 | Fireflies polish & placeholders | ⬜ |
-| 10 | Documentation (README) | 🟡 README written; needs updating as features land |
-| 11 | Containerisation & AWS deployment | ⬜ (backend Dockerfile done) |
+| 5 | Frontend scaffold & design system | 🟡 Built — needs browser verification |
+| 6 | Meetings library view | 🟡 Built — needs browser verification |
+| 7 | Meeting notebook — transcript & player sync | 🟡 Built (incl. transcript search) — needs browser verification |
+| 8 | Summary, chapters & action items | 🟡 Built — needs browser verification |
+| 9 | Fireflies polish & placeholders | 🟡 Built — needs browser verification |
+| 10 | Documentation (README) | 🟡 README reconciled 2026-08-14; deployment section pending |
+| 11 | Containerisation & AWS deployment | ⬜ **← resume here** (backend Dockerfile done) |
 | 12 | Bonus features (time permitting) | ⬜ |
 
 ---
 
 ## Current state — read this first when resuming
 
-**The backend is complete and verified by execution. The frontend is at zero.**
+**The backend is complete and verified by execution. The frontend is built (Phases 5–10);
+deployment (Phase 11) is the substantial work remaining.**
 
 Working and proven by running it:
 - SQLite schema: 10 tables, FKs enforced, WAL, cascade deletes confirmed.
@@ -60,21 +61,27 @@ backend/scripts/verify_api.sh http://localhost:8199
 docker rm -f ff-verify
 ```
 
-**Not started at all:** the entire frontend beyond the `create-next-app` scaffold. This is now
-the *only* substantial work left, and it carries the two heaviest grading criteria — UI/UX
-fidelity and Functionality — plus the highest-risk feature (Phase 7).
+**Frontend, as of 2026-08-14 — builds green (10 routes, TypeScript clean):**
+- Library with filters, sort, pagination, date grouping, empty states
+- Notebook: transcript/player sync, click-to-seek, active-sentence highlight, auto-scroll
+- In-transcript search with highlighted matches, match counter and Enter/Shift+Enter stepping
+- Full action-item CRUD (optimistic, with rollback), create / upload / edit / delete meeting
+- Ctrl+K global search; cross-meeting Q&A with citations that deep-link to `?t=<ms>`
+- Settings and Team placeholders
+
+**Not done:** deployment (Phase 11) and Phase 12 bonuses (export, dark mode, comments).
 
 **Known constraint:** the account hit an API session limit (resets 05:30 Asia/Kolkata) which
 killed one agent mid-task. Plan agent work as fewer, larger tasks rather than many small ones.
 
 ### Immediate next steps, in order
-1. **Phase 5 — frontend shell and design system.** Dev server is verified working
-   (Next 16.3.0, HTTP 200). Run `npm run build` early — dev never type-checks.
-2. **Phase 6 — meetings library view.** The API contract in `backend/app/schemas/` is frozen,
-   so this needs no further backend work.
-3. **Phase 7 — the player/transcript sync.** **Do this personally, not via an agent** — one
-   tightly-coupled feature and the most heavily graded single thing in the project.
-4. Phases 8–9, then deployment (Phase 11).
+1. **Browser verification pass.** Everything above is verified by build, code review and live
+   API calls — *not* by a human driving the UI. EXECUTION.md ticks only on witnessed
+   behaviour, so this gates closing out Phases 5–10.
+2. **Phase 11 — deployment.** task.md requires a hosted demo link; this is the only remaining
+   *required* deliverable. Still blocked on the AWS sign-off question below.
+3. **Rotate the Groq key** (EXECUTION.md G4) — it was exposed in plaintext in a transcript.
+4. Phase 12 bonuses only if time remains.
 
 ### Decisions taken
 - **Summaries are mock-generated, not LLM-generated** (user's call, 2026-08-13). Extractive
@@ -227,7 +234,7 @@ worth failing on. An uploaded speaker becomes a `Speaker` row with `participant_
    commitment) because the code took the *first* sentence of a line instead of the relevant
    one. Fixed with `_best_sentence` (keyword density) and `_cue_sentence` (contains the cue).
 
-## Phase 5 — Frontend scaffold & design system ⬜
+## Phase 5 — Frontend scaffold & design system 🟡 built, pending browser verification
 
 - [ ] Next.js App Router + TypeScript + Tailwind
 - [ ] TanStack Query provider, typed API client
@@ -237,7 +244,7 @@ worth failing on. An uploaded speaker becomes a `Speaker` row with `participant_
 
 **Exit criteria:** shell renders and matches reference screenshots.
 
-## Phase 6 — Meetings library view ⬜
+## Phase 6 — Meetings library view 🟡 built, pending browser verification
 
 - [ ] Meeting list rows: title, date, duration, participant avatars
 - [ ] Search box (debounced, server-backed)
@@ -248,7 +255,7 @@ worth failing on. An uploaded speaker becomes a `Speaker` row with `participant_
 
 **Exit criteria:** all list interactions hit the API and feel instant.
 
-## Phase 7 — Meeting notebook: transcript & player sync ⬜
+## Phase 7 — Meeting notebook: transcript & player sync 🟡 built, pending browser verification
 
 The highest-risk feature; built before the cosmetic work.
 
@@ -264,7 +271,7 @@ The highest-risk feature; built before the cosmetic work.
 **Exit criteria:** playing scrolls the transcript; clicking any line seeks; search
 highlights every match without breaking the active-line highlight.
 
-## Phase 8 — Summary, chapters & action items ⬜
+## Phase 8 — Summary, chapters & action items 🟡 built, pending browser verification
 
 - [ ] Notes panel: Keywords, Overview, Bullet-Point Notes, Time-stamped Outline, Action Items
 - [ ] Chapter click → seek
@@ -274,7 +281,7 @@ highlights every match without breaking the active-line highlight.
 
 **Exit criteria:** every mutation persists across a hard refresh.
 
-## Phase 9 — Fireflies polish & placeholders ⬜
+## Phase 9 — Fireflies polish & placeholders 🟡 built, pending browser verification
 
 - [ ] Toasts on every mutation
 - [ ] Skeleton loaders, empty states, hover/focus states, keyboard shortcuts
@@ -286,7 +293,7 @@ highlights every match without breaking the active-line highlight.
 
 **Exit criteria:** side-by-side comparison with reference screenshots holds up.
 
-## Phase 10 — Documentation ⬜
+## Phase 10 — Documentation 🟡 README reconciled 2026-08-14
 
 - [ ] README: setup (local + Docker), tech stack, architecture overview
 - [ ] Schema documentation + ER diagram

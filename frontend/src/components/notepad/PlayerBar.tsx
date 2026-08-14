@@ -64,7 +64,7 @@ export function PlayerBar({
       {/* Progress Bar (edge to edge above the player bar) */}
       <div 
         ref={progressBarRef}
-        className="absolute top-0 left-0 w-full h-[3px] bg-[var(--color-gray-200)] cursor-pointer touch-none group"
+        className="absolute -top-[3px] left-0 w-full h-[3px] bg-[var(--color-gray-200)] cursor-pointer touch-none group"
         onPointerDown={handlePointerDown}
       >
         <div 
@@ -96,7 +96,7 @@ export function PlayerBar({
         </button>
 
         <button 
-          className="w-10 h-10 rounded-full bg-[var(--color-purple-600)] flex items-center justify-center text-white hover:bg-[var(--color-purple-700)] transition-colors outline-none shadow-sm"
+          className="w-[60px] h-10 rounded-full bg-[var(--color-purple-600)] flex items-center justify-center text-white hover:bg-[var(--color-purple-700)] transition-colors outline-none shadow-sm"
           onClick={playing ? onPause : onPlay}
         >
           {playing ? (

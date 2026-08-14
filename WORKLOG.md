@@ -384,3 +384,77 @@ recipe, the upload page, and the settings card-per-row pattern.
 **Deliberately not captured:** the delete-confirmation modal (would mean opening a destructive
 dialog over someone's real meeting) and the zero-meetings empty state (would mean deleting
 data). Both are safe to design from the shell and the empty-state recipe already recorded.
+
+---
+
+## 2026-08-14 — Closing the gaps the redesign left
+
+An audit against `task.md`'s graded criteria found the frontend far more complete than
+`EXECUTION.md`'s unticked boxes suggested — but with two classes of hole that a green build
+cannot see, plus one outright correctness bug.
+
+**A graded core feature was decorative.** `task.md` #2 requires "search within the transcript
+with highlighted matches". `TranscriptPanel` shipped an `Input` placeholdered "Find or
+Replace" with no `value`, no `onChange` and no filtering. It looked implemented. Built for
+real: every occurrence of the query is a stop (a line containing the word twice is two
+stops), with a match counter, prev/next buttons, Enter / Shift+Enter stepping and Escape to
+clear.
+
+Three things constrained the implementation:
+- **The memo had to survive.** `TranscriptParagraph` is `memo()`'d specifically so playback
+  ticks don't re-render every paragraph. Passing a precomputed per-paragraph match array
+  would be a fresh reference each render and defeat it entirely. Search props are therefore
+  primitives only — `searchQuery`, `activeMatchSentenceId`, `activeMatchOccurrence` — and the
+  highlight is computed inside the memoized component. Same reasoning as the existing
+  `activeSentenceId` prop, which only the owning paragraph receives.
+- **No RegExp.** Highlighting uses `toLowerCase().indexOf()` and slicing, so a query of `(`
+  or `*` is literal text rather than a thrown exception or a silent no-match.
+- **Navigation goes through `onSeek`.** The panel already scrolls the active line to ~45%
+  whenever the clock jumps more than 2s, so stepping reuses that tested path. It is backed up
+  by an explicit scroll keyed on the current match, because two hits less than 2s apart don't
+  trip the seek threshold and would otherwise not scroll at all.
+
+**Working components were unreachable.** The redesign pass orphaned entry points rather than
+breaking code. `CreateMeetingModal` was complete and spec-correct but `setSeedOpen` was never
+called from anywhere — there was no way to create a meeting from a form. The library's
+magnifier button had no `onClick`. `AskPanel` was rendered but `setAskOpen` was never called,
+and `/askfred` had a question box that never called `api.askQuestion`. `TopBar` imported
+`UploadModal` and never rendered it.
+
+Fixed by moving the create modal onto the library page behind a visible "New meeting" button
+rather than re-wiring a trigger to a globally-rendered modal — a global modal driven from
+elsewhere is the same fragility that orphaned it the first time. `/askfred` now asks for real
+and renders answers with citations that deep-link to `?t=<ms>`; `AskPanel` was deleted as
+redundant with that and `RightChatBot`. Dead state and imports removed from `TopBar`.
+
+**Lesson worth keeping:** `npm run build` was green through all of this. A build proves the
+types line up; it says nothing about whether a button is connected to anything. After each
+wiring fix the setter was grepped for an actual call site.
+
+**The upload page was fabricating transcripts.** For any audio or video file it silently
+synthesized a hardcoded WEBVTT placeholder and uploaded *that*, producing a meeting whose
+content the user never supplied and which reads as genuine. Removed. The backend transcribes
+nothing — it parses `.vtt`, `.json` and `.txt` — so the honest failure is now an inline
+message saying exactly that. The dropzone was also advertising "MP3, M4A, WAV, MP4 or WEBM"
+and `accept="audio/*,video/*"`; both now match what the backend actually ingests. The same
+page surfaced 422s as a toast, contradicting the round-4 rule that a file-specific error
+belongs next to the file — now inline, with the dialog kept open.
+
+**Not-found was a bare red string.** `/notebook/<missing>` rendered
+`text-[var(--color-red-600)]`, a token that does not exist in `globals.css`, so it wasn't even
+red. Replaced with a proper empty state that distinguishes a 404 from a backend outage. A
+non-numeric id (`/notebook/abc`) previously returned early from the effect and left the page
+spinning on the loading state forever; it now resolves to not-found.
+
+Also: README reconciled (it still claimed "the frontend is scaffolded but not yet built"),
+`/api/query` documented, stale root `openapi.json` removed.
+
+**Deliberately not touched** — these are decisions, not code: the logo colour (`#e72b6b` vs
+E2's `#6938EF`), E1's 17 `font-semibold`/`font-bold` occurrences (the no-bold rule predates
+the redesign pass, and a blanket sweep could visibly wreck it), the Groq key rotation, and
+deployment.
+
+**Verified by:** `npm run build` green (10 routes, TypeScript clean), all routes returning 200
+against the live dev server, backend `/api/health` 200, and grep-confirmed call sites for
+every setter. **Not verified in a browser** — per this project's rule, nothing here is ticked
+in `EXECUTION.md`.

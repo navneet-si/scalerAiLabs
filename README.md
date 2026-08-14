@@ -9,9 +9,10 @@ seeded from fixtures or ingested from uploaded files; summaries are seeded or ge
 deterministically from transcript text.
 
 > **Build status:** the backend is complete and verified by execution (~40 automated
-> assertions); the frontend is scaffolded but not yet built. See
-> [Implementation status](#implementation-status) for the honest breakdown, and
-> [PLAN.md](./PLAN.md) for the phased plan and what comes next.
+> assertions). The frontend is built: library, notebook, player sync, transcript search,
+> summary/action-item CRUD, filters, global search and cross-meeting Q&A with citations.
+> Not deployed yet. See [Implementation status](#implementation-status) for the honest
+> breakdown.
 
 ---
 
@@ -19,7 +20,7 @@ deterministically from transcript text.
 
 | Layer | Choice | Notes |
 |---|---|---|
-| Frontend | Next.js (App Router) + TypeScript + Tailwind | scaffolded |
+| Frontend | Next.js 16 (App Router) + TypeScript + Tailwind | implemented |
 | Backend | Python 3.12 · FastAPI · SQLAlchemy 2.0 · Pydantic v2 | implemented |
 | Database | SQLite (WAL, foreign keys enforced) | implemented |
 | Runtime | Docker (`python:3.12-slim`) | implemented |
@@ -65,8 +66,66 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt
 ```bash
 cd frontend
 npm install
-npm run dev          # http://localhost:3000
+npm run dev -- -p 3002      # http://localhost:3002
 ```
+
+The frontend expects the backend at `http://localhost:8000/api`; override with
+`NEXT_PUBLIC_API_BASE` in `frontend/.env.local`. Start the backend first — the library
+loads its rows from `/api/meetings` on mount.
+
+### Everything at once (Docker Compose)
+
+```bash
+cp backend/.env.example backend/.env    # add LLM_API_KEY if you want AI answers
+docker compose up -d --build
+```
+
+Then open <http://localhost>. That is the whole stack — nginx on port 80 in front of the
+Next.js server and the API.
+
+| URL | |
+|---|---|
+| `http://localhost/` | the app |
+| `http://localhost/api/health` | API liveness |
+| `http://localhost/docs` | interactive API reference |
+
+---
+
+## Deployment
+
+One host, one published port, one origin. `docker compose up -d --build` is the entire
+deployment; on an EC2 box with an Elastic IP attached, nginx answers on port 80 and nothing
+else is exposed.
+
+```
+          :80
+  browser ────▶ nginx ─┬─ /            ──▶ frontend:3000   (Next.js standalone)
+                       ├─ /api/        ──▶ backend:8000    (FastAPI/uvicorn)
+                       └─ /docs,/redoc ──▶ backend:8000
+                                              │
+                                              └─ dbdata volume ──▶ /srv/data/app.db
+```
+
+**There is no database container.** SQLite is a file, not a server, so the database is the
+named volume `dbdata` mounted at `/srv/data` — which is where the backend's default
+`DATABASE_URL` already points. `docker compose down` keeps it; `docker compose down -v`
+destroys it.
+
+**Why there is no CORS configuration.** The browser only ever talks to one origin. The
+frontend is built with `NEXT_PUBLIC_API_BASE=/api`, a relative path, so API calls go back to
+whatever host served the page and nginx routes them internally. `CORS_ORIGINS` is therefore
+`[]` in production. During local development the two servers *are* separate origins
+(`:3002` and `:8000`), which is the only reason the setting exists.
+
+**`NEXT_PUBLIC_API_BASE` is a build argument, not a runtime variable.** `next build` inlines
+`NEXT_PUBLIC_*` into the browser bundle, so setting it in compose's `environment:` would have
+no effect — the shipped JavaScript would still point at `localhost:8000`. It is passed via
+`build.args` instead, and changing it requires a rebuild rather than a restart.
+
+**The LLM is optional and fails quietly.** With no `LLM_API_KEY`, `POST /api/query` still
+answers using keyword retrieval and reports `answered_by: "keyword"` — no error, no warning.
+If AI answers look shallow in a deployment, check that `backend/.env` exists on the host.
+That file is gitignored and is never baked into an image.
 
 ### Verification scripts
 
@@ -94,7 +153,16 @@ docker rm -f ff-verify
 ## Architecture
 
 ```
-frontend/                    Next.js App Router client
+frontend/
+  src/
+    app/         App Router routes: / · /notebook · /notebook/[id] · /askfred · /upload
+                 · /settings · /team
+    components/
+      library/   meeting rows, date grouping, filters, create/edit/upload modals
+      notepad/   transcript panel, player bar, summary document, action items
+      shell/     sidebar, top bar, placeholder pages
+      ui/        primitives: Button, Input, Modal, Toast, SearchModal, Avatar
+    lib/         api client, types, sentence splitting, media-clock sync, time formatting
 backend/
   app/
     core/        config (pydantic-settings), engine/session, SQLite PRAGMAs
@@ -187,10 +255,17 @@ Base path `/api`. Full interactive reference at `/docs` when running.
 | POST | `/api/meetings/{id}/action-items` | Add an action item | ✅ |
 | PATCH | `/api/action-items/{id}` | Edit / assign / toggle complete | ✅ |
 | DELETE | `/api/action-items/{id}` | Remove an action item | ✅ |
-| GET | `/api/search` | Global cross-meeting transcript search | ⬜ bonus, not built |
+| POST | `/api/query` | Ask a question across meetings; returns an answer with citations | ✅ |
 
-`search` matches on meeting title, description **and participant name** — "find the call with
-Priya" is as common a query as searching by title.
+`search` (on `/api/meetings`) matches meeting title, description **and participant name** —
+"find the call with Priya" is as common a query as searching by title. It powers the Ctrl+K
+modal.
+
+`/api/query` answers in natural language over transcript text and returns citations carrying
+`meeting_id`, `start_ms`, `speaker_label` and the quoted line. The frontend turns each into a
+`/notebook/{id}?t=<ms>` link, so a citation opens the meeting already seeked to that line.
+It uses Groq (`llama-3.3-70b-versatile`) when a key is configured and falls back to keyword
+retrieval otherwise; the response says which via `answered_by`.
 
 The list endpoint omits transcript segments by design: a 10-row library would otherwise ship
 thousands of lines that no row renders. Action-item counts on the list are computed with one
@@ -269,11 +344,21 @@ load order.
 - Mock summary generation: overview, keywords, bullet sections, chapters, action items
 - Backend Dockerfile
 
-**Not yet implemented**
-- The entire frontend beyond the scaffold — library view, notebook, player sync, summary
-  panel, modals, toasts, placeholders. This is the bulk of the remaining work.
-- Global search, export, dark mode and the other bonus items
-- Deployment (target: single EC2 + nginx + CloudFront, see PLAN.md Phase 11)
+**Frontend — built, verified by build + manual use**
+- Library: date-grouped rows, participant/tag/date filters, sort, pagination, empty states
+- Notebook: interactive transcript with speaker labels, click-a-line-to-seek, active-line
+  highlight that follows the clock, auto-scroll with manual-scroll suspension
+- **Search within a transcript** with highlighted matches, match counter and Enter /
+  Shift+Enter stepping that seeks the player to each hit
+- Player bar: play/pause, scrub, rate, chapter jumps
+- Summary document, chapters, and full action-item CRUD with optimistic updates and rollback
+- Create meeting (form or pasted transcript), upload `.vtt`/`.json`/`.txt`, edit, delete
+- Global search modal (Ctrl/Cmd+K) across titles, descriptions and participants
+- Cross-meeting Q&A (`/askfred` and the library assistant) with citations that deep-link to
+  `?t=<ms>` and land on the cited line
+
+**Not implemented**
+- Export (PDF / Markdown / TXT), dark mode, comments and soundbites — bonus items
 
 ---
 
@@ -294,6 +379,4 @@ load order.
 
 ## Project documentation
 
-- [PLAN.md](./PLAN.md) — phased implementation plan, exit criteria, current state, next steps
-- [WORKLOG.md](./WORKLOG.md) — chronological record of decisions, bugs found, and corrections
 - [backend/app/seed/data/FORMAT.md](./backend/app/seed/data/FORMAT.md) — fixture/upload format

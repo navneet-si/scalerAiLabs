@@ -9,14 +9,68 @@ type TranscriptParagraphProps = {
   sentences: Sentence[];
   activeSentenceId: string | null;
   onSentenceClick: (ms: number) => void;
+  // Search props are deliberately primitives. Passing a precomputed match array
+  // would be a fresh reference on every render and defeat the memo below.
+  searchQuery: string;
+  activeMatchSentenceId: string | null;
+  activeMatchOccurrence: number;
 };
+
+// Case-insensitive literal match — no RegExp, so a query of "(" or "*" is just text.
+function highlight(
+  text: string,
+  query: string,
+  isActiveSentence: boolean,
+  activeOccurrence: number,
+) {
+  if (!query) return text;
+
+  const haystack = text.toLowerCase();
+  const needle = query.toLowerCase();
+  const parts: React.ReactNode[] = [];
+
+  let cursor = 0;
+  let occurrence = 0;
+  let key = 0;
+
+  for (;;) {
+    const at = haystack.indexOf(needle, cursor);
+    if (at === -1) break;
+
+    if (at > cursor) parts.push(text.slice(cursor, at));
+
+    const isCurrent = isActiveSentence && occurrence === activeOccurrence;
+    parts.push(
+      <mark
+        key={key++}
+        className={
+          isCurrent
+            ? "bg-[#FDB022] text-[var(--color-gray-900)] rounded-[2px]"
+            : "bg-[#FEF0C7] text-[var(--color-gray-900)] rounded-[2px]"
+        }
+      >
+        {text.slice(at, at + needle.length)}
+      </mark>,
+    );
+
+    cursor = at + needle.length;
+    occurrence++;
+  }
+
+  if (cursor === 0) return text;
+  if (cursor < text.length) parts.push(text.slice(cursor));
+  return parts;
+}
 
 // Memoized paragraph to prevent re-rendering when playback ticks
 export const TranscriptParagraph = memo(function TranscriptParagraph({
   speaker,
   sentences,
   activeSentenceId,
-  onSentenceClick
+  onSentenceClick,
+  searchQuery,
+  activeMatchSentenceId,
+  activeMatchOccurrence
 }: TranscriptParagraphProps) {
   // Use first sentence's start_ms for the paragraph timestamp
   const paragraphStartMs = sentences[0]?.start_ms || 0;
@@ -66,7 +120,12 @@ export const TranscriptParagraph = memo(function TranscriptParagraph({
                 data-sentence-id={s.id}
                 data-active={isActive ? "true" : undefined}
               >
-                {s.text}{" "}
+                {highlight(
+                  s.text,
+                  searchQuery,
+                  s.id === activeMatchSentenceId,
+                  activeMatchOccurrence,
+                )}{" "}
               </span>
             );
           })}

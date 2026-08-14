@@ -23,6 +23,9 @@ export function NotesDocument({
   actionItems,
   onSeek,
   onToggleActionItem,
+  onAddActionItem,
+  onUpdateActionItem,
+  onDeleteActionItem,
 }: {
   meeting: MeetingDetail;
   summary: SummaryRead | null;
@@ -30,6 +33,9 @@ export function NotesDocument({
   actionItems: ActionItemRead[];
   onSeek: (ms: number) => void;
   onToggleActionItem: (id: number, checked: boolean) => void;
+  onAddActionItem?: (text: string) => void;
+  onUpdateActionItem?: (id: number, data: any, optimisticData: any) => void;
+  onDeleteActionItem?: (id: number) => void;
 }) {
   // A form-created meeting with no transcript legitimately has no summary. Say so
   // plainly rather than showing a spinner that will never resolve.
@@ -145,17 +151,18 @@ export function NotesDocument({
               </section>
             )}
 
-            {actionItems.length > 0 && (
-              <section className="mb-10">
-                <SectionHeading>Action Items</SectionHeading>
-                <ActionItemsPanel
-                  items={actionItems}
-                  onToggle={onToggleActionItem}
-                  onSeek={onSeek}
-                  bare
-                />
-              </section>
-            )}
+            <section className="mb-10">
+              <SectionHeading>Action Items</SectionHeading>
+              <ActionItemsPanel
+                items={actionItems}
+                onToggle={onToggleActionItem}
+                onAdd={onAddActionItem}
+                onUpdate={onUpdateActionItem}
+                onDelete={onDeleteActionItem}
+                onSeek={onSeek}
+                bare
+              />
+            </section>
 
             {/* generated_by is "mock" for the offline extractive path, or
                 "provider:model" when an LLM produced it. Say which, rather than

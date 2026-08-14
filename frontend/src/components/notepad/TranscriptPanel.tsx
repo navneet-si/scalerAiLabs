@@ -16,9 +16,11 @@ type TranscriptPanelProps = {
 
 export function TranscriptPanel({ transcript, currentTimeMs, playing, onSeek }: TranscriptPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  
+
   const [autoScroll, setAutoScroll] = useState(true);
-  
+  const [query, setQuery] = useState("");
+  const [matchIndex, setMatchIndex] = useState(0);
+
   // Memoize sentences to prevent churn
   const { sentenceSegments, flatSentences } = useMemo(() => {
     const segments = splitSentences(transcript.segments);
@@ -33,6 +35,80 @@ export function TranscriptPanel({ transcript, currentTimeMs, playing, onSeek }: 
 
   const activeSentenceId = activeIndex >= 0 ? flatSentences[activeIndex].id : null;
   const activeSegmentId = activeIndex >= 0 ? flatSentences[activeIndex].segment_id : null;
+
+  // Every occurrence of the query, in transcript order. One entry per occurrence,
+  // not per sentence — a line containing the word twice is two stops.
+  const matches = useMemo(() => {
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) return [];
+
+    const found: {
+      sentenceId: string;
+      segmentId: number;
+      startMs: number;
+      occurrence: number;
+    }[] = [];
+
+    for (const s of flatSentences) {
+      const haystack = s.text.toLowerCase();
+      let cursor = 0;
+      let occurrence = 0;
+      for (;;) {
+        const at = haystack.indexOf(trimmed, cursor);
+        if (at === -1) break;
+        found.push({
+          sentenceId: s.id,
+          segmentId: s.segment_id,
+          startMs: s.start_ms,
+          occurrence,
+        });
+        cursor = at + trimmed.length;
+        occurrence++;
+      }
+    }
+
+    return found;
+  }, [flatSentences, query]);
+
+  // A new query invalidates the old position.
+  useEffect(() => {
+    setMatchIndex(0);
+  }, [query]);
+
+  // matchIndex is reset by an effect when the query changes, which lands one render
+  // later — modulo here keeps the counter honest in that gap instead of showing "9 of 3".
+  const safeIndex = matches.length > 0 ? matchIndex % matches.length : 0;
+  const currentMatch = matches.length > 0 ? matches[safeIndex] : null;
+
+  const stepMatch = useCallback(
+    (delta: number) => {
+      if (matches.length === 0) return;
+      const next = (matchIndex + delta + matches.length) % matches.length;
+      setMatchIndex(next);
+      // Reuse the tested seek path: the panel already scrolls the active line to
+      // ~45% whenever the clock jumps, and this puts the match under the playhead.
+      onSeek(matches[next].startMs);
+    },
+    [matches, matchIndex, onSeek],
+  );
+
+  // Seeking alone does not scroll when two matches sit less than the 2s seek
+  // threshold apart, so drive the scroll off the match itself as well.
+  useEffect(() => {
+    if (!currentMatch) return;
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const node = container.querySelector(
+      `[data-sentence-id="${currentMatch.sentenceId}"]`,
+    ) as HTMLElement | null;
+    if (!node) return;
+
+    const targetY = node.offsetTop - container.clientHeight * 0.45;
+    if (Math.abs(container.scrollTop - targetY) > 5) {
+      container.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+    }
+  }, [currentMatch]);
 
   // Stable identity, or every paragraph re-renders on each tick regardless of memo.
   const handleSentenceClick = useCallback(
@@ -129,10 +205,61 @@ export function TranscriptPanel({ transcript, currentTimeMs, playing, onSeek }: 
       <div className="h-14 flex items-center px-4 border-b border-[var(--color-gray-200)] flex-shrink-0">
         <div className="relative w-full max-w-sm">
           <svg className="absolute left-3 top-2 text-[var(--color-gray-400)]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <Input 
-            className="pl-9 !h-8 text-[14px]" 
-            placeholder="Find or Replace" 
+          <Input
+            className="pl-9 pr-28 !h-8 text-[14px]"
+            placeholder="Find in transcript"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                stepMatch(e.shiftKey ? -1 : 1);
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                setQuery("");
+              }
+            }}
           />
+
+          {query.trim() && (
+            <div className="absolute right-1.5 top-1 flex items-center gap-0.5">
+              <span
+                className={`text-[12px] tabular-nums mr-1 ${
+                  matches.length === 0
+                    ? "text-[var(--color-pink-700)]"
+                    : "text-[var(--color-gray-500)]"
+                }`}
+              >
+                {matches.length === 0 ? "No results" : `${safeIndex + 1} of ${matches.length}`}
+              </span>
+
+              <button
+                aria-label="Previous match"
+                disabled={matches.length === 0}
+                onClick={() => stepMatch(-1)}
+                className="p-1 rounded text-[var(--color-gray-500)] hover:bg-[var(--color-gray-100)] disabled:opacity-40 disabled:hover:bg-transparent outline-none"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+              </button>
+
+              <button
+                aria-label="Next match"
+                disabled={matches.length === 0}
+                onClick={() => stepMatch(1)}
+                className="p-1 rounded text-[var(--color-gray-500)] hover:bg-[var(--color-gray-100)] disabled:opacity-40 disabled:hover:bg-transparent outline-none"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+
+              <button
+                aria-label="Clear search"
+                onClick={() => setQuery("")}
+                className="p-1 rounded text-[var(--color-gray-400)] hover:bg-[var(--color-gray-100)] hover:text-[var(--color-gray-700)] outline-none"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -152,6 +279,15 @@ export function TranscriptPanel({ transcript, currentTimeMs, playing, onSeek }: 
               // all of them at each sentence boundary, defeating the memo entirely.
               activeSentenceId={segment.id === activeSegmentId ? activeSentenceId : null}
               onSentenceClick={handleSentenceClick}
+              searchQuery={query.trim()}
+              // Same reasoning as activeSentenceId: only the paragraph holding the
+              // current match hears about it, so stepping re-renders two paragraphs.
+              activeMatchSentenceId={
+                currentMatch && segment.id === currentMatch.segmentId
+                  ? currentMatch.sentenceId
+                  : null
+              }
+              activeMatchOccurrence={currentMatch ? currentMatch.occurrence : -1}
             />
           ))}
         </div>
