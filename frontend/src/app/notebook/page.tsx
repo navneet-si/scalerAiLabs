@@ -14,6 +14,12 @@ import { SearchModal } from "@/components/ui/SearchModal";
 import { RightChatBot } from "@/components/library/RightChatBot";
 
 // Helper to group meetings by date label "Thu, Sep 25, 2025"
+/**
+ * Groups an array of meetings by their local date string representation.
+ * This is used to render the section headers (e.g. "Thu, Sep 25, 2025") in the Library view.
+ * @param meetings - The flat list of meetings fetched from the API.
+ * @returns A dictionary where the key is the formatted date label and the value is an array of meetings for that date.
+ */
 function groupMeetingsByDate(meetings: MeetingListItem[]) {
   const groups: Record<string, MeetingListItem[]> = {};
   
@@ -27,6 +33,11 @@ function groupMeetingsByDate(meetings: MeetingListItem[]) {
   return groups;
 }
 
+/**
+ * LibraryPage is the main index view for the application (/notebook).
+ * It acts as a Client Component to manage state for pagination, search, filters,
+ * and bulk selection of meetings.
+ */
 export default function LibraryPage() {
   const [meetings, setMeetings] = useState<MeetingListItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -70,7 +81,7 @@ export default function LibraryPage() {
   };
 
   useEffect(() => {
-    // Reset and fetch when filters change
+    // Reset offset and fetch fresh results when filters change (debounced implicitly by the user action)
     setOffset(0);
     fetchMeetings(0, false);
   }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps

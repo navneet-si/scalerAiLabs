@@ -14,6 +14,17 @@ export type SentenceSegment = {
   sentences: Sentence[];
 };
 
+/**
+ * Splits a list of transcript segments into individual sentences.
+ * 
+ * This is crucial for rendering granular highlights during playback.
+ * A naive `.split('.')` would over-split on abbreviations (e.g. Mr., e.g.) and decimals (e.g. 3.14).
+ * This function iterates character-by-character to accurately identify true sentence boundaries
+ * by checking context (e.g., ensuring a period is followed by a space) and avoiding known abbreviations.
+ * 
+ * @param segments - The raw transcript segments from the backend.
+ * @returns An array of objects pairing each segment with its parsed sentences.
+ */
 export function splitSentences(segments: SegmentRead[]): SentenceSegment[] {
   return segments.map((segment) => {
     // Regex for sentence splitting, attempting to avoid abbreviations and decimals
@@ -93,8 +104,18 @@ export function flattenSentences(sentenceSegments: SentenceSegment[]): Sentence[
   return sentenceSegments.flatMap(s => s.sentences);
 }
 
-// Binary search to find active sentence
-// The active sentence is the LAST sentence whose start_ms <= currentTime_ms
+/**
+ * Uses binary search to instantly find the currently active sentence for a given playback timestamp.
+ * 
+ * In a long meeting, finding the active sentence iteratively (O(N)) on every clock tick (60 FPS) 
+ * would cause significant UI lag. This function operates in O(log N) time.
+ * The "active sentence" is defined as the *last* sentence whose `start_ms` is less than or equal 
+ * to the `currentTimeMs`.
+ * 
+ * @param sentences - A flattened, chronologically sorted array of all sentences.
+ * @param currentTimeMs - The current audio playback time in milliseconds.
+ * @returns The index of the active sentence, or -1 if no sentence is active yet.
+ */
 export function findActiveSentenceIndex(sentences: Sentence[], currentTimeMs: number): number {
   if (sentences.length === 0) return -1;
   if (currentTimeMs < sentences[0].start_ms) return -1;

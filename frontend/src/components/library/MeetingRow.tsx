@@ -23,6 +23,11 @@ function formatMeetingDateShort(isoDate: string) {
   return `${mmm} ${day}, ${yyyy} · ${time}`;
 }
 
+/**
+ * Displays a single meeting in the library view.
+ * Handles hover states, the contextual action menu, and rendering the meeting's
+ * primary information (title, date, duration, host).
+ */
 export function MeetingRow({ meeting: initialMeeting, checked, onToggle }: MeetingRowProps) {
   const [meeting, setMeeting] = useState(initialMeeting);
   const [isHovered, setIsHovered] = useState(false);

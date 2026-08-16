@@ -15,6 +15,10 @@ import {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000/api";
 
+/**
+ * Custom error class to propagate structured HTTP errors from the backend.
+ * The backend often returns 422 with a structured Pydantic error in `data.detail`.
+ */
 class ApiError extends Error {
   constructor(public status: number, public data: any) {
     super(`API Error: ${status}`);
@@ -42,9 +46,15 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     throw new ApiError(res.status, errorData);
   }
   
+  
   return res.json();
 }
 
+/**
+ * A lightweight, typed fetch wrapper interacting with the backend API.
+ * This app uses Client Components and calls these methods inside `useEffect` 
+ * rather than adopting heavy caching layers like TanStack Query.
+ */
 export const api = {
   health: () => request<{ status: string }>("/health"),
   
@@ -56,6 +66,8 @@ export const api = {
       }
     });
     const qs = query.toString();
+    // Retrieves a paged envelope of meetings (Page<MeetingListItem>).
+    // The items exclude heavy transcript text to keep the library fast.
     return request<Page<MeetingListItem>>(`/meetings${qs ? `?${qs}` : ""}`);
   },
   

@@ -14,6 +14,14 @@ type TranscriptPanelProps = {
   onSeek: (ms: number) => void;
 };
 
+/**
+ * TranscriptPanel is the core component for displaying and interacting with meeting transcripts.
+ * It manages several complex states:
+ * 1. Synchronizing the active sentence highlight with the current audio playback time (`currentTimeMs`).
+ * 2. An advanced, case-insensitive textual search index that maps matches to their byte-offsets.
+ * 3. Auto-scrolling the viewport to keep the active sentence vertically centered (~45% from the top).
+ * 4. Suspending auto-scroll when the user manually scrolls, so they aren't forced back to the active line.
+ */
 export function TranscriptPanel({ transcript, currentTimeMs, playing, onSeek }: TranscriptPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -99,11 +107,13 @@ export function TranscriptPanel({ transcript, currentTimeMs, playing, onSeek }: 
     const container = scrollRef.current;
     if (!container) return;
 
+    // We locate the DOM node of the sentence containing the match by its data attribute
     const node = container.querySelector(
       `[data-sentence-id="${currentMatch.sentenceId}"]`,
     ) as HTMLElement | null;
     if (!node) return;
 
+    // Land the active match at ~45% of the panel height
     const targetY = node.offsetTop - container.clientHeight * 0.45;
     if (Math.abs(container.scrollTop - targetY) > 5) {
       container.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
@@ -164,7 +174,9 @@ export function TranscriptPanel({ transcript, currentTimeMs, playing, onSeek }: 
 
     const handleScroll = () => {
       if (!playing) return;
-      // If user scrolls manually, suspend auto-scroll
+      // If user scrolls manually while playing, we suspend auto-scroll.
+      // This prevents the UI from aggressively yanking the user back to the playhead
+      // when they are trying to read ahead or behind.
       setAutoScroll(false);
     };
     

@@ -15,6 +15,13 @@ import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
 
+/**
+ * MeetingPage represents the core "Notepad" or "Meeting Details" view (`/notebook/[id]`).
+ * 
+ * It manages the split-fetching of a meeting's metadata vs its large transcript text.
+ * It is responsible for bridging the audio playback state (`useMediaSync`) with both 
+ * the interactive transcript (`TranscriptPanel`) and the structured notes (`NotesDocument`).
+ */
 export default function MeetingPage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -43,6 +50,8 @@ export default function MeetingPage() {
       return;
     }
 
+    // Optimization: Fetch the lightweight meeting metadata and the heavy transcript payload concurrently.
+    // The transcript call is allowed to fail (e.g. 404 if no transcript exists), catching to null.
     Promise.all([
       api.getMeeting(meetingId),
       api.getTranscript(meetingId).catch(() => null)
@@ -105,7 +114,7 @@ export default function MeetingPage() {
 
   const handleToggleActionItem = async (id: number, checked: boolean) => {
     if (!meeting) return;
-    // Optimistic update
+    // Optimistic update: instantly toggle the checkbox in the UI while the backend request runs.
     setMeeting(prev => {
       if (!prev) return prev;
       return {

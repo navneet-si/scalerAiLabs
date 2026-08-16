@@ -15,7 +15,10 @@ type ActionItemsPanelProps = {
   bare?: boolean;
 };
 
-// Group action items by assignee
+/**
+ * Groups a flat list of action items by their assignee.
+ * Unassigned items are grouped together under the "Unassigned" key.
+ */
 function groupItems(items: ActionItemRead[]) {
   const grouped = new Map<number | "unassigned", { assignee: ParticipantRead | null, items: ActionItemRead[] }>();
   
@@ -82,6 +85,11 @@ function EditableText({ text, onSave }: { text: string, onSave: (val: string) =>
   );
 }
 
+/**
+ * ActionItemsPanel renders the action items for a meeting.
+ * It automatically groups them by assignee and provides inline editing
+ * for text, assignment, and due dates. Changes are immediately synced to the backend.
+ */
 export function ActionItemsPanel({ items, onToggle, onAdd, onUpdate, onDelete, onSeek, bare = false }: ActionItemsPanelProps) {
   const [participants, setParticipants] = useState<ParticipantRead[]>([]);
   const [newItemText, setNewItemText] = useState("");

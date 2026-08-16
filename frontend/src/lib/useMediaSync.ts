@@ -2,6 +2,17 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 
+/**
+ * useMediaSync synchronizes the transcript UI with an audio player.
+ * 
+ * In a real product, meetings might lack audio files (e.g., imported text only, or audio is still processing).
+ * This hook handles both scenarios gracefully:
+ * 1. If an audioUrl is provided, it mounts a standard HTML5 `<audio>` element and binds to its `timeupdate` events.
+ * 2. If no audioUrl is provided, it simulates playback using a Virtual Clock driven by `requestAnimationFrame`.
+ * 
+ * @param durationMs - The total duration of the meeting in milliseconds, supplied by the backend.
+ * @param audioUrl - Optional URL to the audio file.
+ */
 export function useMediaSync(durationMs: number, audioUrl: string | null) {
   const [playing, setPlaying] = useState(false);
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
@@ -10,7 +21,7 @@ export function useMediaSync(durationMs: number, audioUrl: string | null) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const rafRef = useRef<number | null>(null);
 
-  // Virtual clock state
+  // Virtual clock state variables used when audioUrl is null.
   const virtualTimeRef = useRef(0);
   const lastTickTimeRef = useRef(0);
 
@@ -84,9 +95,10 @@ export function useMediaSync(durationMs: number, audioUrl: string | null) {
     }
   }, [audioUrl, durationMs, playing]);
 
-  // Virtual clock loop
+  // Virtual clock loop: When no audio is present, simulate playback progress using requestAnimationFrame
   useEffect(() => {
     if (audioUrl || !playing) {
+      // If we have real audio or are paused, clear any running virtual clock frames.
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
@@ -95,21 +107,26 @@ export function useMediaSync(durationMs: number, audioUrl: string | null) {
     }
 
     const tick = (now: number) => {
+      // Calculate how much time passed since the last frame
       const delta = now - lastTickTimeRef.current;
       lastTickTimeRef.current = now;
       
+      // Advance virtual time, accounting for custom playback speeds (e.g. 1.5x)
       virtualTimeRef.current += (delta * playbackRate);
       
       if (virtualTimeRef.current >= durationMs) {
+        // Stop playback once we hit the known duration
         virtualTimeRef.current = durationMs;
         setCurrentTimeMs(durationMs);
         setPlaying(false);
       } else {
+        // Update the current time and request the next frame
         setCurrentTimeMs(virtualTimeRef.current);
         rafRef.current = requestAnimationFrame(tick);
       }
     };
     
+    // Initialize the clock
     lastTickTimeRef.current = performance.now();
     rafRef.current = requestAnimationFrame(tick);
     
